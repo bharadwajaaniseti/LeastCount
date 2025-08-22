@@ -65,12 +65,12 @@ const Table: React.FC = () => {
   return (
     <div className="table-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
       <div className="table-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
-        <div className="game-table table-rim" style={{ margin: '0 auto', left: '50%', transform: 'translateX(-50%)', position: 'relative' }}>
+        <div className="game-table table-rim" style={{ margin: '0 auto', left: '50%', transform: 'translateX(-50%)', position: 'relative', zIndex: 1 }}>
           {/* Table Felt */}
-          <div className="table-felt w-full h-full relative flex items-center justify-center">
+          <div className="table-felt w-full h-full relative flex items-center justify-center" style={{ zIndex: 1 }}>
             {/* Joker Display */}
             {roomState.currentJoker && (
-              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex flex-col items-center gap-1 sm:gap-2 bg-yellow-600 bg-opacity-20 p-2 sm:p-3 rounded-lg border border-yellow-400 z-10">
+              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex flex-col items-center gap-1 sm:gap-2 bg-yellow-600 bg-opacity-20 p-2 sm:p-3 rounded-lg border border-yellow-400 z-20">
                 <div className="text-yellow-300 text-xs font-bold">JOKER</div>
                 <Card 
                   card={{ 
@@ -86,8 +86,8 @@ const Table: React.FC = () => {
             )}
 
             {/* Center Area - Stock, Discard, Card Slot */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 lg:gap-8">
+            <div className="absolute inset-0 flex items-center justify-center z-30">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 lg:gap-8 bg-black/20 p-4 rounded-xl backdrop-blur-sm">
                 {/* Stock Pile */}
                 <div className="flex flex-col items-center gap-1 sm:gap-2">
                   <div className="text-white text-xs sm:text-sm font-medium">Stock</div>
@@ -205,7 +205,7 @@ const Table: React.FC = () => {
                   break;
               }
               return (
-                <div key={player.id} className={`${seatClass} max-w-[100px] sm:max-w-[120px] lg:max-w-[180px]`}>
+                <div key={player.id} className={`${seatClass} max-w-[100px] sm:max-w-[120px] lg:max-w-[180px] z-10`}>
                   <Seat playerId={player.id} />
                 </div>
               );

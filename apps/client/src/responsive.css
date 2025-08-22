@@ -70,6 +70,27 @@ html, body {
   position: relative !important;
   left: 0 !important;
   transform: none !important;
+  z-index: 1 !important;
+}
+
+/* Z-index layering for game elements */
+.table-felt {
+  z-index: 1 !important;
+}
+
+/* Center game area should be on top */
+.table-felt .absolute.inset-0 {
+  z-index: 30 !important;
+}
+
+/* Seats should be behind center area but above table */
+.seat, [class*="absolute"]:has(.seat) {
+  z-index: 10 !important;
+}
+
+/* Interactive elements should be highest */
+.card-slot, .cursor-pointer {
+  z-index: 40 !important;
 }
 
 /* Mobile optimizations */
