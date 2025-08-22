@@ -172,33 +172,49 @@ export class GameManager {
       return;
     }
 
-    // Remove cards from hand and put them in card slot (temporary area)
+    // Remove cards from hand
     player.hand = player.hand.filter(c => !data.cardIds.includes(c.id));
     
-    // Put actual cards in card slot preview (temporary area)
-    room!.cardSlotPreview = cards;
+    // Create discard group from discarded cards
+    const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
     
-    // Don't update topDiscard yet - that happens when player hits MOVE
-    // const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
+    // Check if the discarded card(s) match the top discard card
+    const canSkipDraw = this.checkMatchingDiscard(room!.topDiscard, discardGroup);
     
-    // For now, we can't check matching discard since cards aren't in discard pile yet
-    // Player must go through draw phase, then MOVE to place cards in discard pile
+    // Add cards to discard pile
+    room!.topDiscard = discardGroup;
     
-    // Normal flow - go to draw phase (card slot mechanism)
-    room!.phase = 'turn-draw';
+    // Clear card slot
+    room!.cardSlotPreview = [];
+    
     room!.turnActions = { 
       hasDiscarded: true, 
       hasDrawn: false,
-      discardedFromCardSlot: true // Track that they discarded to card slot
+      discardedFromCardSlot: false
     };
     
     room!.canShow = false; // No show after any action
 
-    this.io.to(data.roomCode).emit('room:state', room!);
-    this.io.to(data.roomCode).emit('turn:updated', { 
-      // Cards are now in card slot, not discard pile yet
-      skippedDraw: false // Card slot mechanism always requires draw phase
-    });
+    if (canSkipDraw) {
+      // Player discarded matching card - can skip draw and end turn
+      room!.turnActions.hasDrawn = true; // Mark as "drawn" to allow turn end
+      this.endTurn(room!);
+      
+      this.io.to(data.roomCode).emit('room:state', room!);
+      this.io.to(data.roomCode).emit('turn:updated', { 
+        discardGroup: discardGroup,
+        skippedDraw: true // Indicate they skipped draw due to matching discard
+      });
+    } else {
+      // Normal flow - go to draw phase
+      room!.phase = 'turn-draw';
+      
+      this.io.to(data.roomCode).emit('room:state', room!);
+      this.io.to(data.roomCode).emit('turn:updated', { 
+        discardGroup: discardGroup,
+        skippedDraw: false
+      });
+    }
   }
 
   handleDrawStock(socket: TypedSocket, data: { roomCode: string }) {
@@ -216,8 +232,10 @@ export class GameManager {
     if (newCard) {
       player.hand.push(newCard);
       room!.stockCount--;
-      room!.phase = 'await-move';
       room!.turnActions!.hasDrawn = true;
+
+      // End turn after drawing
+      this.endTurn(room!);
 
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { drewFrom: 'stock' });
@@ -227,15 +245,6 @@ export class GameManager {
   handleDrawDiscard(socket: TypedSocket, data: { roomCode: string; end: 'first' | 'last' }) {
     const room = this.rooms.get(data.roomCode);
     if (!this.validateTurn(socket, room, 'turn-draw')) return;
-
-    // Check if player discarded from card slot - they can't draw their own discard
-    if (room!.turnActions?.discardedFromCardSlot) {
-      socket.emit('error', { 
-        code: 'CANNOT_DRAW_OWN_DISCARD', 
-        message: 'Cannot draw from discard pile after discarding to card slot' 
-      });
-      return;
-    }
 
     if (!room!.topDiscard) {
       socket.emit('error', { code: 'EMPTY_DISCARD', message: 'Discard pile is empty' });
@@ -261,8 +270,10 @@ export class GameManager {
     }
 
     player.hand.push(drawnCard);
-    room!.phase = 'await-move';
     room!.turnActions!.hasDrawn = true;
+
+    // End turn after drawing
+    this.endTurn(room!);
 
     this.io.to(data.roomCode).emit('room:state', room!);
     this.io.to(data.roomCode).emit('turn:updated', { 
@@ -394,7 +405,7 @@ export class GameManager {
 
     // Set up stock
     room.stockCount = this.deck.remainingCards();
-    room.phase = 'turn-draw';
+    room.phase = 'turn-discard';
   }
 
   private setRoundJoker(room: RoomState) {
@@ -463,7 +474,7 @@ export class GameManager {
       room.activePlayerId = activePlayers[0].id;
     }
     
-    room.phase = 'turn-draw';
+    room.phase = 'turn-discard';
     
     // Check if player can show (hand total <= threshold)
     const activePlayer = activePlayers.find(p => p.id === room.activePlayerId);
