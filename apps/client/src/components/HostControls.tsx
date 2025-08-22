@@ -48,9 +48,9 @@ export const HostControls: React.FC = () => {
       <div className="bg-green-800 rounded-lg p-4 border-2 border-yellow-600 shadow-lg">
         <h3 className="text-yellow-400 font-bold text-lg mb-3 text-center">Host Controls</h3>
         
-        <div className="flex flex-col gap-2">
+        <div className="space-y-3">
           {/* Room Info */}
-          <div className="text-white text-sm">
+          <div className="text-white text-sm bg-green-900/50 rounded p-2">
             <div>Room: <span className="font-mono text-yellow-300">{room.roomCode}</span></div>
             <div>Players: <span className="text-yellow-300">{playerCount}/8</span></div>
             <div>Elimination: <span className="text-yellow-300">{room.rules.eliminationAt} pts</span></div>
@@ -60,28 +60,28 @@ export const HostControls: React.FC = () => {
           {!isGameActive && (
             <button
               onClick={() => setShowRulesModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded font-medium transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded font-medium transition-colors text-sm"
             >
-              Game Rules
+              ⚙️ Game Rules
             </button>
           )}
 
           {/* End Room Button */}
           <button
             onClick={handleEndRoom}
-            className={`px-3 py-2 rounded font-medium transition-colors ${
+            className={`w-full px-3 py-2 rounded font-medium transition-colors text-sm ${
               showEndConfirm
                 ? 'bg-red-700 hover:bg-red-800 text-white'
                 : 'bg-red-600 hover:bg-red-700 text-white'
             }`}
           >
-            {showEndConfirm ? 'Confirm End Room' : 'End Room'}
+            {showEndConfirm ? '⚠️ Confirm End Room' : '🚪 End Room'}
           </button>
 
           {showEndConfirm && (
             <button
               onClick={() => setShowEndConfirm(false)}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-xs"
             >
               Cancel
             </button>

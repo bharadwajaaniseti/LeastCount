@@ -31,7 +31,7 @@ const Lobby: React.FC = () => {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {roomState.players.map((player) => (
+            {roomState.players.map((player: any) => (
               <div
                 key={player.id}
                 className="flex items-center justify-between bg-gray-700/50 rounded-lg p-3"
@@ -71,57 +71,61 @@ const Lobby: React.FC = () => {
           </div>
         </div>
 
-        {/* Game Rules Summary */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-3">Game Rules</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="text-gray-300">
-              <div className="font-medium text-white">Hand Size:</div>
-              <div>{roomState.rules.handSize} cards</div>
-            </div>
-            <div className="text-gray-300">
-              <div className="font-medium text-white">Declare Threshold:</div>
-              <div>≤ {roomState.rules.declareThreshold} points</div>
-            </div>
-            <div className="text-gray-300">
-              <div className="font-medium text-white">Bad Declare Penalty:</div>
-              <div>{roomState.rules.badDeclarePenalty} points</div>
-            </div>
-            <div className="text-gray-300">
-              <div className="font-medium text-white">Elimination:</div>
-              <div>At {roomState.rules.eliminationAt} points</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
+        {/* Main Content with Sidebar Layout */}
         <div className="flex gap-6">
-          <div className="flex-1 text-center space-y-4">
-            {isHost ? (
-              <button
-                onClick={startGame}
-                disabled={roomState.players.length < 2}
-                className="btn-primary px-8 py-3 text-lg disabled:opacity-50"
-              >
-                {roomState.players.length < 2 
-                  ? 'Need at least 2 players' 
-                  : `Start Game (${roomState.players.length} players)`
-                }
-              </button>
-            ) : (
-              <div className="text-gray-400">
-                Waiting for host to start the game...
+          {/* Left Side - Game Info and Actions */}
+          <div className="flex-1 space-y-6">
+            {/* Game Rules Summary */}
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-3">Game Rules</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="text-gray-300">
+                  <div className="font-medium text-white">Hand Size:</div>
+                  <div>{roomState.rules.handSize} cards</div>
+                </div>
+                <div className="text-gray-300">
+                  <div className="font-medium text-white">Declare Threshold:</div>
+                  <div>≤ {roomState.rules.declareThreshold} points</div>
+                </div>
+                <div className="text-gray-300">
+                  <div className="font-medium text-white">Bad Declare Penalty:</div>
+                  <div>{roomState.rules.badDeclarePenalty} points</div>
+                </div>
+                <div className="text-gray-300">
+                  <div className="font-medium text-white">Elimination:</div>
+                  <div>At {roomState.rules.eliminationAt} points</div>
+                </div>
               </div>
-            )}
-            
-            <div className="text-gray-500 text-sm">
-              {isHost ? 'You can start the game when ready' : 'Only the host can start the game'}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="text-center space-y-4">
+              {isHost ? (
+                <button
+                  onClick={startGame}
+                  disabled={roomState.players.length < 2}
+                  className="btn-primary px-8 py-3 text-lg disabled:opacity-50"
+                >
+                  {roomState.players.length < 2 
+                    ? 'Need at least 2 players' 
+                    : `Start Game (${roomState.players.length} players)`
+                  }
+                </button>
+              ) : (
+                <div className="text-gray-400">
+                  Waiting for host to start the game...
+                </div>
+              )}
+              
+              <div className="text-gray-500 text-sm">
+                {isHost ? 'You can start the game when ready' : 'Only the host can start the game'}
+              </div>
             </div>
           </div>
 
-          {/* Host Controls Sidebar */}
+          {/* Right Side - Host Controls */}
           {isHost && (
-            <div className="w-64">
+            <div className="w-72">
               <HostControls />
             </div>
           )}
