@@ -172,20 +172,11 @@ export class GameManager {
       return;
     }
 
-    // Remove cards from hand
+    // Remove cards from hand and put them in card slot (staging area)
     player.hand = player.hand.filter(c => !data.cardIds.includes(c.id));
     
-    // Create discard group from discarded cards
-    const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
-    
-    // Check if the discarded card(s) match the top discard card
-    const canSkipDraw = this.checkMatchingDiscard(room!.topDiscard, discardGroup);
-    
-    // Add cards to discard pile
-    room!.topDiscard = discardGroup;
-    
-    // Clear card slot
-    room!.cardSlotPreview = [];
+    // Put cards in card slot preview (staging area)
+    room!.cardSlotPreview = cards;
     
     room!.turnActions = { 
       hasDiscarded: true, 
@@ -194,11 +185,17 @@ export class GameManager {
     };
     
     room!.canShow = false; // No show after any action
-
+    
+    // Check if the discarded cards would match the top discard card
+    const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
+    const canSkipDraw = this.checkMatchingDiscard(room!.topDiscard, discardGroup);
+    
     if (canSkipDraw) {
-      // Player discarded matching card - can skip draw and end turn
+      // Player discarded matching card - move directly to await-move with draw marked as complete
+      room!.topDiscard = discardGroup;
+      room!.cardSlotPreview = [];
       room!.turnActions.hasDrawn = true; // Mark as "drawn" to allow turn end
-      this.endTurn(room!);
+      room!.phase = 'await-move';
       
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { 
@@ -206,12 +203,11 @@ export class GameManager {
         skippedDraw: true // Indicate they skipped draw due to matching discard
       });
     } else {
-      // Normal flow - go to draw phase
-      room!.phase = 'turn-draw';
+      // Normal flow - go to await-move phase (player needs to hit MOVE to place cards in discard)
+      room!.phase = 'await-move';
       
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { 
-        discardGroup: discardGroup,
         skippedDraw: false
       });
     }
@@ -232,10 +228,8 @@ export class GameManager {
     if (newCard) {
       player.hand.push(newCard);
       room!.stockCount--;
+      room!.phase = 'await-move';
       room!.turnActions!.hasDrawn = true;
-
-      // End turn after drawing
-      this.endTurn(room!);
 
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { drewFrom: 'stock' });
@@ -270,10 +264,8 @@ export class GameManager {
     }
 
     player.hand.push(drawnCard);
+    room!.phase = 'await-move';
     room!.turnActions!.hasDrawn = true;
-
-    // End turn after drawing
-    this.endTurn(room!);
 
     this.io.to(data.roomCode).emit('room:state', room!);
     this.io.to(data.roomCode).emit('turn:updated', { 
@@ -285,10 +277,10 @@ export class GameManager {
     const room = this.rooms.get(data.roomCode);
     if (!this.validateTurn(socket, room, 'await-move')) return;
 
-    if (!room!.turnActions?.hasDiscarded || !room!.turnActions?.hasDrawn) {
+    if (!room!.turnActions?.hasDiscarded) {
       socket.emit('error', { 
         code: 'INCOMPLETE_TURN', 
-        message: 'Must discard and draw before moving' 
+        message: 'Must discard before moving' 
       });
       return;
     }
@@ -305,7 +297,15 @@ export class GameManager {
       room!.cardSlotPreview = [];
     }
 
-    this.endTurn(room!);
+    // Check if player has already drawn (due to matching discard skip)
+    if (room!.turnActions?.hasDrawn) {
+      // Player skipped draw due to matching discard, end turn
+      this.endTurn(room!);
+    } else {
+      // Normal flow - go to draw phase
+      room!.phase = 'turn-draw';
+      this.io.to(room!.roomCode).emit('room:state', room!);
+    }
   }
 
   handleShow(socket: TypedSocket, data: { roomCode: string }) {
