@@ -1,4 +1,5 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
@@ -29,7 +30,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
 const gameManager = new GameManager(io);
 
 // Basic health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health',( _req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
