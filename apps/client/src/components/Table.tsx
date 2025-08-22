@@ -85,7 +85,7 @@ const Table: React.FC = () => {
             </div>
           )}
           {/* Center Area - Stock, Discard, Card Slot */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col md:flex-row items-center gap-2 md:gap-6 w-full max-w-xl">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col md:flex-row items-center gap-2 md:gap-6 w-full max-w-xl">
             {/* Stock Pile */}
             <div className="flex flex-col items-center gap-1 md:gap-2">
               <div className="text-white text-xs md:text-sm font-medium">Stock</div>
@@ -174,28 +174,28 @@ const Table: React.FC = () => {
             let seatClass = '';
             switch (displayPosition) {
               case 0:
-                seatClass = 'absolute bottom-2 left-1/2 transform -translate-x-1/2';
+                seatClass = 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
                 break;
               case 1:
-                seatClass = 'absolute bottom-8 right-2 md:bottom-12 md:right-12';
+                seatClass = 'absolute bottom-16 right-4 md:bottom-24 md:right-24';
                 break;
               case 2:
-                seatClass = 'absolute right-2 top-1/2 transform -translate-y-1/2 md:right-4';
+                seatClass = 'absolute right-4 top-1/2 transform -translate-y-1/2 md:right-8';
                 break;
               case 3:
-                seatClass = 'absolute top-8 right-2 md:top-12 md:right-12';
+                seatClass = 'absolute top-16 right-4 md:top-24 md:right-24';
                 break;
               case 4:
-                seatClass = 'absolute top-2 left-1/2 transform -translate-x-1/2';
+                seatClass = 'absolute top-0 left-1/2 transform -translate-x-1/2'; // Move top seat further up
                 break;
               case 5:
-                seatClass = 'absolute top-8 left-2 md:top-12 md:left-12';
+                seatClass = 'absolute top-16 left-4 md:top-24 md:left-24';
                 break;
               case 6:
-                seatClass = 'absolute left-2 top-1/2 transform -translate-y-1/2 md:left-4';
+                seatClass = 'absolute left-4 top-1/2 transform -translate-y-1/2 md:left-8';
                 break;
               case 7:
-                seatClass = 'absolute bottom-8 left-2 md:bottom-12 md:left-12';
+                seatClass = 'absolute bottom-16 left-4 md:bottom-24 md:left-24';
                 break;
             }
             return (

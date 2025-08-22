@@ -232,11 +232,23 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { socket, roomState } = get();
     if (socket && roomState) {
       socket.emit('room:exit', { roomCode: roomState.roomCode });
-      
-      // Clear stored room data when voluntarily exiting
-      localStorage.removeItem('leastcount_room');
-      localStorage.removeItem('leastcount_player_name');
     }
+    // Clear all client state and localStorage
+    set({
+      roomState: null,
+      roomCode: null,
+      playerId: null,
+      selectedCardIds: [],
+      selectionInfo: null,
+      showRulesModal: false,
+      showScoresModal: false,
+      showRoundEndModal: false,
+      roundEndData: null,
+      scoresData: null,
+      error: null,
+    });
+    localStorage.removeItem('leastcount_room');
+    localStorage.removeItem('leastcount_player_name');
   },
 
   viewScores: () => {

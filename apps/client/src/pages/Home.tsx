@@ -99,9 +99,28 @@ const Home: React.FC = () => {
             </div>
           </div>
         ) : error && (
-          <div className="bg-red-600/20 border border-red-600/30 text-red-400 px-4 py-3 rounded-lg">
+          <div className="bg-red-600/20 border border-red-600/30 text-red-400 px-4 py-3 rounded-lg flex flex-col items-center">
             {error === 'Game already in progress'
-              ? `You are already in this game as "${localStorage.getItem('leastcount_player_name') || ''}". Please use the same name to reconnect.`
+              ? (
+                  <>
+                    <div>
+                      You are already in this game as "{localStorage.getItem('leastcount_player_name') || ''}".<br />
+                      Please use the same name to reconnect.
+                    </div>
+                    <button
+                      className="mt-3 btn-primary px-6 py-2"
+                      onClick={() => {
+                        setPlayerName(localStorage.getItem('leastcount_player_name') || '');
+                        setRoomCode(localStorage.getItem('leastcount_room') || '');
+                        setIsReconnecting(true);
+                        joinRoom(localStorage.getItem('leastcount_room') || '', localStorage.getItem('leastcount_player_name') || '');
+                        setTimeout(() => setIsReconnecting(false), 3000);
+                      }}
+                    >
+                      Try Again
+                    </button>
+                  </>
+                )
               : error}
           </div>
         )}
@@ -123,6 +142,7 @@ const Home: React.FC = () => {
                 placeholder="Enter your name"
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 maxLength={20}
+                disabled={error === 'Game already in progress'}
               />
             </div>
 
