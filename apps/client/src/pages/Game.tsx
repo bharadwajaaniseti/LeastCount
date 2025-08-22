@@ -7,6 +7,7 @@ import Hand from '@/components/Hand';
 import Controls from '@/components/Controls';
 import RulesModal from '@/components/RulesModal';
 import ScoreView from '@/components/ScoreView';
+import RoundEndModal from '@/components/RoundEndModal';
 
 const Game: React.FC = () => {
   const { roomCode: urlRoomCode } = useParams();
@@ -21,6 +22,9 @@ const Game: React.FC = () => {
     setShowRulesModal,
     showScoresModal,
     setShowScoresModal,
+    showRoundEndModal,
+    setShowRoundEndModal,
+    roundEndData,
     scoresData,
     viewScores,
     exitRoom
@@ -151,6 +155,18 @@ const Game: React.FC = () => {
         <ScoreView 
           isOpen={showScoresModal}
           onClose={() => setShowScoresModal(false)}
+        />
+      )}
+
+      {/* Round End Modal */}
+      {showRoundEndModal && roundEndData && roomState && (
+        <RoundEndModal
+          isOpen={showRoundEndModal}
+          roundScores={roundEndData.roundScores}
+          players={roomState.players}
+          winnerId={roundEndData.winnerId}
+          currentJoker={roomState.currentJoker}
+          onNextRound={() => setShowRoundEndModal(false)}
         />
       )}
     </div>

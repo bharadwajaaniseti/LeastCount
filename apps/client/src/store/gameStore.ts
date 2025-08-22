@@ -25,6 +25,11 @@ interface GameState {
   selectionInfo: SelectionInfo | null;
   showRulesModal: boolean;
   showScoresModal: boolean;
+  showRoundEndModal: boolean;
+  roundEndData: { 
+    roundScores: Record<string, number>; 
+    winnerId: string;
+  } | null;
   scoresData: { players: any[]; roundScores: Record<string, number[]> } | null;
   error: string | null;
   
@@ -39,6 +44,7 @@ interface GameState {
   exitRoom: () => void;
   viewScores: () => void;
   setShowScoresModal: (show: boolean) => void;
+  setShowRoundEndModal: (show: boolean) => void;
   selectCard: (cardId: string) => void;
   confirmDiscard: () => void;
   drawStock: () => void;
@@ -60,6 +66,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   selectionInfo: null,
   showRulesModal: false,
   showScoresModal: false,
+  showRoundEndModal: false,
+  roundEndData: null,
   scoresData: null,
   error: null,
 
@@ -148,6 +156,17 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ 
         scoresData: { players, roundScores },
         showScoresModal: true 
+      });
+    });
+
+    socket.on('show:result', ({ callerId, scoresRound }) => {
+      // Show round end modal with results
+      set({
+        showRoundEndModal: true,
+        roundEndData: {
+          roundScores: scoresRound,
+          winnerId: callerId // The person who showed/declared
+        }
       });
     });
 
@@ -299,6 +318,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setShowScoresModal: (show: boolean) => {
     set({ showScoresModal: show });
+  },
+
+  setShowRoundEndModal: (show: boolean) => {
+    set({ showRoundEndModal: show });
   },
 
   clearError: () => {

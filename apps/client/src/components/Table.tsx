@@ -10,16 +10,57 @@ const Table: React.FC = () => {
 
   const { stockCount, topDiscard, cardSlotPreview } = roomState;
 
-  // Create dynamic seat arrangement with current player at bottom (seat 0)
-  const currentPlayer = roomState.players.find(p => p.id === playerId);
-  const currentPlayerSeat = currentPlayer?.seat || 0;
-  
-  // Calculate relative seat positions with current player at bottom
-  const getRelativeSeat = (absoluteSeat: number): number => {
-    const totalSeats = 8;
-    const relativeSeat = (absoluteSeat - currentPlayerSeat + totalSeats) % totalSeats;
-    return relativeSeat;
+  // Calculate optimal seat positions based on player count
+  const getOptimalSeatPositions = (playerCount: number): number[] => {
+    switch (playerCount) {
+      case 2:
+        return [0, 4]; // Bottom and top
+      case 3:
+        return [0, 2, 6]; // Bottom, right, left (triangle)
+      case 4:
+        return [0, 2, 4, 6]; // Bottom, right, top, left (square)
+      case 5:
+        return [0, 1, 3, 5, 7]; // Bottom, bottom-right, top-right, top-left, bottom-left
+      case 6:
+        return [0, 1, 2, 4, 5, 6]; // All except top corners
+      case 7:
+        return [0, 1, 2, 3, 5, 6, 7]; // All except top-left
+      case 8:
+      default:
+        return [0, 1, 2, 3, 4, 5, 6, 7]; // All positions
+    }
   };
+
+  const optimalPositions = getOptimalSeatPositions(roomState.players.length);
+  
+  // Map each player to their optimal position, ensuring current player is at position 0 (bottom)
+  const playersWithOptimalPositions = roomState.players.map((player, index) => {
+    let positionIndex = index;
+    
+    // If this is the current player, put them at position 0 (bottom)
+    if (player.id === playerId) {
+      positionIndex = 0;
+    } else {
+      // For other players, shift index if current player is not already at index 0
+      const currentPlayerIndex = roomState.players.findIndex(p => p.id === playerId);
+      if (currentPlayerIndex !== 0) {
+        if (index < currentPlayerIndex) {
+          positionIndex = index + 1;
+        } else {
+          positionIndex = index;
+        }
+        if (positionIndex >= optimalPositions.length) {
+          positionIndex = positionIndex % optimalPositions.length;
+        }
+      }
+    }
+    
+    const optimalPosition = optimalPositions[positionIndex];
+    return {
+      ...player,
+      displayPosition: optimalPosition
+    };
+  });
 
   return (
     <div className="h-full w-full relative flex items-center justify-center p-8">
@@ -132,14 +173,13 @@ const Table: React.FC = () => {
             </div>
           </div>
 
-          {/* Player Seats - Arranged dynamically around the table with current player at bottom */}
-          {/* Current player always at bottom (seat 0) */}
-          {roomState.players.map((player) => {
-            const relativeSeat = getRelativeSeat(player.seat);
+          {/* Player Seats - Arranged dynamically with optimal positions */}
+          {playersWithOptimalPositions.map((player) => {
+            const displayPosition = player.displayPosition;
             let seatClass = '';
             
-            switch (relativeSeat) {
-              case 0: // Bottom (current player)
+            switch (displayPosition) {
+              case 0: // Bottom (current player when possible)
                 seatClass = 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
                 break;
               case 1: // Bottom Right
@@ -168,46 +208,6 @@ const Table: React.FC = () => {
             return (
               <div key={player.id} className={seatClass}>
                 <Seat playerId={player.id} />
-              </div>
-            );
-          })}
-          
-          {/* Empty seats */}
-          {Array.from({ length: 8 - roomState.players.length }).map((_, index) => {
-            const emptySeatIndex = roomState.players.length + index;
-            const relativeSeat = getRelativeSeat(emptySeatIndex);
-            let seatClass = '';
-            
-            switch (relativeSeat) {
-              case 0:
-                seatClass = 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
-                break;
-              case 1:
-                seatClass = 'absolute bottom-12 right-12';
-                break;
-              case 2:
-                seatClass = 'absolute right-4 top-1/2 transform -translate-y-1/2';
-                break;
-              case 3:
-                seatClass = 'absolute top-12 right-12';
-                break;
-              case 4:
-                seatClass = 'absolute top-4 left-1/2 transform -translate-x-1/2';
-                break;
-              case 5:
-                seatClass = 'absolute top-12 left-12';
-                break;
-              case 6:
-                seatClass = 'absolute left-4 top-1/2 transform -translate-y-1/2';
-                break;
-              case 7:
-                seatClass = 'absolute bottom-12 left-12';
-                break;
-            }
-
-            return (
-              <div key={`empty-${index}`} className={seatClass}>
-                <Seat playerId={null} />
               </div>
             );
           })}
