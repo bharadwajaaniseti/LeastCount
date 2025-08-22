@@ -26,9 +26,9 @@ const Hand: React.FC = () => {
       8: 8,
       9: 9,
       10: 10,
-      'J': 11,
-      'Q': 12,
-      'K': 13,
+      'J': 10,
+      'Q': 10,
+      'K': 10,
       'JOKER': 0,
     };
     return values[rank] || 0;

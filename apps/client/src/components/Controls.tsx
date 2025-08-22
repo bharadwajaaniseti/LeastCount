@@ -58,15 +58,45 @@ const Controls: React.FC = () => {
 
   return (
     <div className="h-full flex items-center justify-between px-6">
-      {/* Game Phase Indicator */}
-      <div className="flex flex-col">
-        <div className="text-gray-400 text-sm">Phase</div>
-        <div className="text-white font-medium capitalize">
-          {roomState.phase.replace('-', ' ')}
+      {/* Left Side: Game Info & Utility Buttons */}
+      <div className="flex items-center gap-6">
+        {/* Game Phase Indicator */}
+        <div className="flex flex-col">
+          <div className="text-gray-400 text-sm">Phase</div>
+          <div className="text-white font-medium capitalize">
+            {roomState.phase.replace('-', ' ')}
+          </div>
+          {isMyTurn && (
+            <div className="text-yellow-400 text-sm">Your turn</div>
+          )}
         </div>
-        {isMyTurn && (
-          <div className="text-yellow-400 text-sm">Your turn</div>
-        )}
+
+        {/* Utility Buttons */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              // This will be handled by parent component
+              const event = new CustomEvent('showScores');
+              window.dispatchEvent(event);
+            }}
+            className="btn-secondary px-4 py-2 text-sm"
+            title="View Scores"
+          >
+            Score
+          </button>
+
+          <button
+            onClick={() => {
+              // This will be handled by parent component
+              const event = new CustomEvent('exitGame');
+              window.dispatchEvent(event);
+            }}
+            className="btn-danger px-4 py-2 text-sm"
+            title="Exit Game"
+          >
+            Exit
+          </button>
+        </div>
       </div>
 
       {/* Draw Instructions */}
@@ -90,34 +120,8 @@ const Controls: React.FC = () => {
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* Right Side: Game Action Buttons */}
       <div className="flex items-center gap-4">
-        {/* Score Button */}
-        <button
-          onClick={() => {
-            // This will be handled by parent component
-            const event = new CustomEvent('showScores');
-            window.dispatchEvent(event);
-          }}
-          className="btn-secondary px-4 py-2"
-          title="View Scores"
-        >
-          Score
-        </button>
-
-        {/* Exit Button */}
-        <button
-          onClick={() => {
-            // This will be handled by parent component
-            const event = new CustomEvent('exitGame');
-            window.dispatchEvent(event);
-          }}
-          className="btn-danger px-4 py-2"
-          title="Exit Game"
-        >
-          Exit
-        </button>
-
         {/* Show Button */}
         <button
           onClick={show}
