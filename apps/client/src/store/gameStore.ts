@@ -89,26 +89,57 @@ export const useGameStore = create<GameState>((set, get) => ({
       (import.meta.env.MODE === 'production' ? 'https://leastcount.onrender.com' : 'http://localhost:3001');
     const socket = io(serverUrl, {
       transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
     // Store socket immediately
     set({ socket });
 
     socket.on('connect', () => {
-      set({ connected: true, playerId: socket.id });
+      console.log('🔌 Connected to server');
+      set({ connected: true, playerId: socket.id, error: null });
       
       // Try to restore room state from localStorage if available
       const storedRoomCode = localStorage.getItem('leastcount_room');
       const storedPlayerName = localStorage.getItem('leastcount_player_name');
       
       if (storedRoomCode && storedPlayerName) {
+        console.log('🔄 Rejoining room:', storedRoomCode);
         // Attempt to rejoin the stored room
         socket.emit('room:join', { roomCode: storedRoomCode, name: storedPlayerName });
       }
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
+      console.log('🔌 Disconnected:', reason);
       set({ connected: false });
+      // Don't clear room state immediately - preserve for reconnection
+    });
+
+    socket.on('reconnect', (attemptNumber) => {
+      console.log('🔄 Reconnected after', attemptNumber, 'attempts');
+      set({ connected: true, error: null });
+      
+      // Try to rejoin room after reconnection
+      const storedRoomCode = localStorage.getItem('leastcount_room');
+      const storedPlayerName = localStorage.getItem('leastcount_player_name');
+      
+      if (storedRoomCode && storedPlayerName) {
+        console.log('🔄 Rejoining room after reconnection');
+        socket.emit('room:join', { roomCode: storedRoomCode, name: storedPlayerName });
+      }
+    });
+
+    socket.on('reconnect_error', () => {
+      set({ error: 'Connection lost. Trying to reconnect...' });
+    });
+
+    socket.on('connect_error', () => {
+      set({ connected: false, error: 'Cannot connect to server' });
     });
 
     socket.on('room:state', (roomState: any) => {
