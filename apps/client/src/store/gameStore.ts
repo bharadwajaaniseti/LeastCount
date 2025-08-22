@@ -73,7 +73,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // Actions
   connect: () => {
-    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 
+      (import.meta.env.MODE === 'production' ? 'https://leastcount.onrender.com' : 'http://localhost:3001');
     const socket = io(serverUrl, {
       transports: ['websocket'],
     });
