@@ -1,65 +1,46 @@
 # 🚀 Quick Deployment Guide
 
-## Before You Deploy
+## ✅ Issues Fixed
 
-1. **Fix dependencies locally:**
-   ```bash
-   cd apps/server
-   npm install --save-dev @types/express @types/uuid
-   ```
+1. **✅ Type Dependencies**: Added `@types/express` and `@types/uuid` to root package.json
+2. **✅ Render Port**: Removed static PORT from render.yaml (Render assigns its own)
+3. **✅ CORS Configuration**: Updated server to allow `https://least-count.netlify.app`
+4. **✅ Environment Variables**: Updated client to connect to `https://leastcount.onrender.com`
+5. **✅ Global Types**: Added backup `global.d.ts` for monorepo builds
 
-2. **Test builds work:**
-   ```bash
-   cd ../../
-   npm run build:server
-   npm run build:client  
-   ```
+## Ready to Deploy!
 
-3. **Commit all changes:**
-   ```bash
-   git add .
-   git commit -m "Fix deployment dependencies"
-   git push
-   ```
+### Step 1: Commit All Changes
+```bash
+git add .
+git commit -m "Fix deployment: Add global types, remove static port, update CORS"
+git push
+```
 
-## Option 1: Railway (Recommended)
+### Step 2: Trigger Render Redeploy
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Find your "least-count-server" service
+3. Click "Manual Deploy" → "Deploy latest commit"
+4. Monitor build logs for success
 
-1. Go to [railway.app](https://railway.app)
-2. Connect your GitHub repo
-3. Railway will auto-detect the railway.toml
-4. Deploy will happen automatically
-5. Copy your Railway URL
+### Step 3: Verify Netlify Auto-Redeploy
+1. Netlify should auto-redeploy when you push
+2. Check [Netlify Dashboard](https://app.netlify.com) for deploy status
+3. Once both are deployed, connection indicator should turn green
 
-## Option 2: Render with Docker
+## Expected Results
 
-1. Go to [render.com](https://render.com)
+- **Server**: https://leastcount.onrender.com (accessible)
+- **Client**: https://least-count.netlify.app (green connection indicator)
+- **Full functionality**: Host controls, game play, bots all working
+
+## If Still Having Issues
+
+Try the Docker deployment method:
+1. In Render, delete current service
 2. Create new Web Service
-3. Connect GitHub repo
-4. Choose "Docker" environment
-5. Set Dockerfile path: `./Dockerfile`
-6. Deploy
-
-## Option 3: Render Simple
-
-1. Go to [render.com](https://render.com)  
-2. Connect GitHub repo
-3. Use these settings:
-   - Environment: Node
-   - Build Command: `npm run build:server`
-   - Start Command: `npm run start:server`
-
-## Deploy Client to Netlify
-
-1. Update `apps/client/.env.production` with your server URL
-2. Commit and push changes
-3. Go to [netlify.com](https://netlify.com)
-4. Connect GitHub repo
-5. Netlify will auto-detect netlify.toml
-
-## Final Steps
-
-1. Update server CORS with Netlify URL
-2. Commit and push
-3. Both services redeploy automatically
+3. Choose "Docker" environment
+4. Repository root contains `Dockerfile`
+5. No build command needed
 
 Done! 🎉
