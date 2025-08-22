@@ -63,9 +63,9 @@ const Table: React.FC = () => {
   });
 
   return (
-    <div className="table-container">
-      <div className="table-wrapper">
-        <div className="game-table table-rim">
+    <div className="table-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+      <div className="table-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+        <div className="game-table table-rim" style={{ margin: '0 auto', left: '50%', transform: 'translateX(-50%)', position: 'relative' }}>
           {/* Table Felt */}
           <div className="table-felt w-full h-full relative flex items-center justify-center">
             {/* Joker Display */}

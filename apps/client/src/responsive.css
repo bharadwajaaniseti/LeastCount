@@ -58,9 +58,18 @@ html, body {
   max-width: min(90vw, 90vh * 1.6);
   aspect-ratio: 16/10;
   position: relative;
-  margin: 0 auto;
-  left: 50%;
-  transform: translateX(-50%);
+  margin: 0 auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  display: block;
+}
+
+/* Override any conflicting styles */
+.table-rim {
+  margin: 0 auto !important;
+  position: relative !important;
+  left: 0 !important;
+  transform: none !important;
 }
 
 /* Mobile optimizations */
