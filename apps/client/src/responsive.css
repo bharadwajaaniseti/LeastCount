@@ -1,3 +1,24 @@
+/* Force everything to center */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
 /* Additional responsive layout fixes */
 .game-container {
   display: flex;
@@ -5,6 +26,9 @@
   min-height: 100vh;
   max-height: 100vh;
   overflow: hidden;
+  width: 100vw;
+  margin: 0 auto;
+  position: relative;
 }
 
 .table-container {
@@ -14,6 +38,8 @@
   justify-content: center;
   min-height: 0;
   padding: 0.5rem;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .table-wrapper {
@@ -24,6 +50,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto;
 }
 
 .game-table {
@@ -31,6 +58,9 @@
   max-width: min(90vw, 90vh * 1.6);
   aspect-ratio: 16/10;
   position: relative;
+  margin: 0 auto;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* Mobile optimizations */
