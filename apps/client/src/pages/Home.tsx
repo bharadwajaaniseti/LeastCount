@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/gameStore';
 
 const Home: React.FC = () => {
-  const [playerName, setPlayerName] = useState('');
+  const [playerName, setPlayerName] = useState(() => localStorage.getItem('leastcount_player_name') || '');
   const [roomCode, setRoomCode] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [eliminationPoints, setEliminationPoints] = useState(200);
@@ -30,17 +30,18 @@ const Home: React.FC = () => {
     // Check if we should attempt automatic reconnection
     const storedRoomCode = localStorage.getItem('leastcount_room');
     const storedPlayerName = localStorage.getItem('leastcount_player_name');
-    
     if (connected && storedRoomCode && storedPlayerName && !roomState) {
+      setPlayerName(storedPlayerName);
+      setRoomCode(storedRoomCode);
       setIsReconnecting(true);
+      joinRoom(storedRoomCode, storedPlayerName);
       // Give some time for the auto-reconnection to work
       const timeout = setTimeout(() => {
         setIsReconnecting(false);
       }, 3000); // 3 second timeout for reconnection
-      
       return () => clearTimeout(timeout);
     }
-  }, [connected, roomState]);
+  }, [connected, roomState, joinRoom]);
 
   useEffect(() => {
     if (roomState) {
@@ -99,7 +100,9 @@ const Home: React.FC = () => {
           </div>
         ) : error && (
           <div className="bg-red-600/20 border border-red-600/30 text-red-400 px-4 py-3 rounded-lg">
-            {error}
+            {error === 'Game already in progress'
+              ? `You are already in this game as "${localStorage.getItem('leastcount_player_name') || ''}". Please use the same name to reconnect.`
+              : error}
           </div>
         )}
 

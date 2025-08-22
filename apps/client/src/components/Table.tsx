@@ -63,15 +63,14 @@ const Table: React.FC = () => {
   });
 
   return (
-    <div className="h-full w-full relative flex items-center justify-center p-8">
+    <div className="h-full w-full relative flex items-center justify-center p-2 md:p-8 overflow-x-auto">
       {/* Table Rim */}
-      <div className="table-rim w-full max-w-6xl aspect-[16/10]">
+      <div className="table-rim w-full max-w-6xl aspect-[16/10] min-w-[340px] md:min-w-[600px] lg:min-w-[900px]">
         {/* Table Felt */}
         <div className="table-felt w-full h-full relative flex items-center justify-center">
-          
           {/* Joker Display */}
           {roomState.currentJoker && (
-            <div className="absolute top-4 right-4 flex flex-col items-center gap-2 bg-yellow-600 bg-opacity-20 p-3 rounded-lg border border-yellow-400">
+            <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col items-center gap-2 bg-yellow-600 bg-opacity-20 p-2 md:p-3 rounded-lg border border-yellow-400">
               <div className="text-yellow-300 text-xs font-bold">JOKER</div>
               <Card 
                 card={{ 
@@ -85,12 +84,11 @@ const Table: React.FC = () => {
               <div className="text-yellow-300 text-xs">Round {roomState.round}</div>
             </div>
           )}
-          
           {/* Center Area - Stock, Discard, Card Slot */}
-          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 flex items-center gap-6">
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col md:flex-row items-center gap-2 md:gap-6 w-full max-w-xl">
             {/* Stock Pile */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-white text-sm font-medium">Stock</div>
+            <div className="flex flex-col items-center gap-1 md:gap-2">
+              <div className="text-white text-xs md:text-sm font-medium">Stock</div>
               <div
                 className="relative cursor-pointer"
                 onClick={() => {
@@ -107,13 +105,12 @@ const Table: React.FC = () => {
                 )}
               </div>
             </div>
-
             {/* Discard Pile */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-white text-sm font-medium">Discard</div>
+            <div className="flex flex-col items-center gap-1 md:gap-2">
+              <div className="text-white text-xs md:text-sm font-medium">Discard</div>
               <div className="relative">
                 {topDiscard && topDiscard.cards.length > 0 ? (
-                  <div className="flex -space-x-4">
+                  <div className="flex -space-x-2 md:-space-x-4">
                     {topDiscard.cards.map((card, index) => (
                       <Card
                         key={card.id}
@@ -143,13 +140,12 @@ const Table: React.FC = () => {
                 )}
               </div>
             </div>
-
             {/* Card Slot */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-white text-sm font-medium">Card Slot</div>
+            <div className="flex flex-col items-center gap-1 md:gap-2">
+              <div className="text-white text-xs md:text-sm font-medium">Card Slot</div>
               <div className="card-slot">
                 {cardSlotPreview && cardSlotPreview.length > 0 ? (
-                  <div className="flex -space-x-2">
+                  <div className="flex -space-x-1 md:-space-x-2">
                     {cardSlotPreview.map((cardId) => {
                       // Find the card in the current player's hand
                       const currentPlayer = roomState.players.find(p => p.id === roomState.activePlayerId);
@@ -172,41 +168,38 @@ const Table: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Player Seats - Arranged dynamically with optimal positions */}
+          {/* Player Seats - Responsive arrangement */}
           {playersWithOptimalPositions.map((player) => {
             const displayPosition = player.displayPosition;
             let seatClass = '';
-            
             switch (displayPosition) {
-              case 0: // Bottom (current player when possible)
-                seatClass = 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
+              case 0:
+                seatClass = 'absolute bottom-2 left-1/2 transform -translate-x-1/2';
                 break;
-              case 1: // Bottom Right
-                seatClass = 'absolute bottom-12 right-12';
+              case 1:
+                seatClass = 'absolute bottom-8 right-2 md:bottom-12 md:right-12';
                 break;
-              case 2: // Right
-                seatClass = 'absolute right-4 top-1/2 transform -translate-y-1/2';
+              case 2:
+                seatClass = 'absolute right-2 top-1/2 transform -translate-y-1/2 md:right-4';
                 break;
-              case 3: // Top Right
-                seatClass = 'absolute top-12 right-12';
+              case 3:
+                seatClass = 'absolute top-8 right-2 md:top-12 md:right-12';
                 break;
-              case 4: // Top
-                seatClass = 'absolute top-4 left-1/2 transform -translate-x-1/2';
+              case 4:
+                seatClass = 'absolute top-2 left-1/2 transform -translate-x-1/2';
                 break;
-              case 5: // Top Left
-                seatClass = 'absolute top-12 left-12';
+              case 5:
+                seatClass = 'absolute top-8 left-2 md:top-12 md:left-12';
                 break;
-              case 6: // Left
-                seatClass = 'absolute left-4 top-1/2 transform -translate-y-1/2';
+              case 6:
+                seatClass = 'absolute left-2 top-1/2 transform -translate-y-1/2 md:left-4';
                 break;
-              case 7: // Bottom Left
-                seatClass = 'absolute bottom-12 left-12';
+              case 7:
+                seatClass = 'absolute bottom-8 left-2 md:bottom-12 md:left-12';
                 break;
             }
-
             return (
-              <div key={player.id} className={seatClass}>
+              <div key={player.id} className={seatClass + ' max-w-[120px] md:max-w-[180px]'}>
                 <Seat playerId={player.id} />
               </div>
             );
