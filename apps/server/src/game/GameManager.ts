@@ -148,6 +148,7 @@ export class GameManager {
 
     this.dealCards(room);
     this.setRoundJoker(room);
+    this.initializeDiscardPile(room);
     this.setRoundFirstPlayer(room);
     this.io.to(data.roomCode).emit('game:started');
     this.startTurn(room);
@@ -403,6 +404,36 @@ export class GameManager {
     room.currentJoker = jokerSequence[randomIndex];
   }
 
+  private initializeDiscardPile(room: RoomState) {
+    // Draw a card from stock to start the discard pile
+    // Keep drawing until we get a card that is not a joker (rank doesn't match current joker)
+    let initialCard: Card | null = null;
+    
+    do {
+      initialCard = this.deck.drawCard();
+      if (!initialCard) {
+        // If we somehow run out of cards (shouldn't happen), break
+        console.warn('Ran out of cards while trying to initialize discard pile');
+        break;
+      }
+    } while (initialCard && initialCard.rank === room.currentJoker);
+    
+    if (initialCard) {
+      // Create discard group for the initial card
+      room.topDiscard = {
+        type: 'single',
+        cards: [initialCard],
+        ordered: false
+      };
+      
+      // Update stock count since we drew a card
+      room.stockCount = this.deck.remainingCards();
+      
+      // Initialize card slot as empty
+      room.cardSlotPreview = [];
+    }
+  }
+
   private setRoundFirstPlayer(room: RoomState) {
     const activePlayers = room.players.filter(p => p.status === 'active');
     if (activePlayers.length === 0) return;
@@ -539,6 +570,7 @@ export class GameManager {
       this.setRoundFirstPlayer(room); // Rotate starting player
       this.dealCards(room);
       this.setRoundJoker(room); // Set new joker for round
+      this.initializeDiscardPile(room); // Initialize discard pile with non-joker card
       this.startTurn(room);
     }
 
