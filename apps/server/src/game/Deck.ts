@@ -8,32 +8,35 @@ export class Deck {
     this.reset();
   }
 
-  reset(): void {
+  reset(numberOfDecks: number = 1): void {
     this.cards = [];
     
-    // Standard 52 cards
-    const suits: Suit[] = ['S', 'H', 'D', 'C'];
-    const ranks: Rank[] = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'];
+    // Create the specified number of decks
+    for (let deckIndex = 0; deckIndex < numberOfDecks; deckIndex++) {
+      // Standard 52 cards per deck
+      const suits: Suit[] = ['S', 'H', 'D', 'C'];
+      const ranks: Rank[] = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'];
 
-    for (const suit of suits) {
-      for (const rank of ranks) {
-        this.cards.push({
-          id: uuidv4(),
-          rank,
-          suit,
-        });
+      for (const suit of suits) {
+        for (const rank of ranks) {
+          this.cards.push({
+            id: uuidv4(),
+            rank,
+            suit,
+          });
+        }
       }
-    }
 
-    // Add 2 jokers
-    this.cards.push({
-      id: uuidv4(),
-      rank: 'JOKER',
-    });
-    this.cards.push({
-      id: uuidv4(),
-      rank: 'JOKER',
-    });
+      // Add 2 jokers per deck
+      this.cards.push({
+        id: uuidv4(),
+        rank: 'JOKER',
+      });
+      this.cards.push({
+        id: uuidv4(),
+        rank: 'JOKER',
+      });
+    }
   }
 
   shuffle(): void {

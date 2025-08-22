@@ -67,6 +67,33 @@ export class GameManager {
       return;
     }
 
+    // Check if player with same name already exists (reconnection case)
+    const existingPlayer = room.players.find(p => p.name === data.name);
+    
+    if (existingPlayer) {
+      // Player is reconnecting - update their socket ID
+      const oldSocketId = existingPlayer.id;
+      existingPlayer.id = socket.id;
+      
+      // Update mappings
+      this.playerRooms.delete(oldSocketId);
+      this.playerRooms.set(socket.id, data.roomCode);
+      
+      // Update active player ID if it was this player
+      if (room.activePlayerId === oldSocketId) {
+        room.activePlayerId = socket.id;
+      }
+      
+      // Update first player ID if it was this player  
+      if (room.firstPlayerId === oldSocketId) {
+        room.firstPlayerId = socket.id;
+      }
+      
+      socket.join(data.roomCode);
+      this.io.to(data.roomCode).emit('room:state', room);
+      return;
+    }
+
     if (room.phase !== 'lobby') {
       socket.emit('error', { code: 'GAME_IN_PROGRESS', message: 'Game already in progress' });
       return;
@@ -313,7 +340,19 @@ export class GameManager {
   }
 
   private dealCards(room: RoomState) {
-    this.deck.reset();
+    // Determine number of decks based on player count
+    const playerCount = room.players.length;
+    let numberOfDecks: number;
+    
+    if (playerCount <= 3) {
+      numberOfDecks = 1;  // 1-3 players: 1 deck (54 cards)
+    } else if (playerCount <= 6) {
+      numberOfDecks = 2;  // 4-6 players: 2 decks (108 cards)
+    } else {
+      numberOfDecks = 3;  // 7+ players: 3 decks (162 cards)
+    }
+
+    this.deck.reset(numberOfDecks);
     this.deck.shuffle();
 
     // Clear all players' hands first

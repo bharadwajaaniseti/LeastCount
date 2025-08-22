@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/gameStore';
-import { Card, Rank } from '@least-count/shared';
 import Lobby from '@/components/Lobby';
 import Table from '@/components/Table';
 import Hand from '@/components/Hand';
@@ -26,42 +25,6 @@ const Game: React.FC = () => {
     viewScores,
     exitRoom
   } = useGameStore();
-
-  // Card values for scoring
-  const getCardValue = (rank: Rank): number => {
-    const values: Record<Rank, number> = {
-      'A': 1,
-      2: 2,
-      3: 3,
-      4: 4,
-      5: 5,
-      6: 6,
-      7: 7,
-      8: 8,
-      9: 9,
-      10: 10,
-      'J': 11,
-      'Q': 12,
-      'K': 13,
-      'JOKER': 0,
-    };
-    return values[rank] || 0;
-  };
-
-  // Helper function to calculate hand total
-  const calculateHandTotal = (hand: Card[]) => {
-    if (!hand || !Array.isArray(hand)) return 0;
-    
-    return hand.reduce((total, card) => {
-      if (!card) return total;
-      
-      // If card is the current joker rank, it counts as 0
-      if (roomState?.currentJoker && card.rank === roomState.currentJoker) {
-        return total + 0;
-      }
-      return total + getCardValue(card.rank);
-    }, 0);
-  };
 
   useEffect(() => {
     if (!connected) {
@@ -125,7 +88,6 @@ const Game: React.FC = () => {
     );
   }
 
-  const currentPlayer = roomState.players.find(p => p.id === playerId);
   const isMyTurn = roomState.activePlayerId === playerId;
 
   return (
@@ -178,38 +140,6 @@ const Game: React.FC = () => {
               </svg>
             </button>
           </div>
-
-          {/* Score and Hand Count Display */}
-          {currentPlayer && currentPlayer.hand && (
-            <div className="absolute bottom-24 left-4 z-10">
-              <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3 space-y-2">
-                <div>
-                  <div className="text-gray-400 text-sm">Your Score</div>
-                  <div className="text-white text-xl font-bold">{currentPlayer.score || 0}</div>
-                </div>
-                <div>
-                  <div className="text-gray-400 text-sm">Hand Count</div>
-                  <div className="text-yellow-400 text-lg font-bold">
-                    {calculateHandTotal(currentPlayer.hand)}
-                  </div>
-                </div>
-                <div className="text-gray-500 text-xs">
-                  {currentPlayer.name} • {currentPlayer.hand.length} cards
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Debug Info - Remove this after testing */}
-          {!currentPlayer && (
-            <div className="absolute bottom-24 left-4 z-10">
-              <div className="bg-red-800/90 backdrop-blur-sm border border-red-700 rounded-lg p-3">
-                <div className="text-red-300 text-sm">No Current Player Found</div>
-                <div className="text-red-400 text-xs">Player ID: {playerId}</div>
-                <div className="text-red-400 text-xs">Players: {roomState.players.length}</div>
-              </div>
-            </div>
-          )}
         </>
       )}
 
