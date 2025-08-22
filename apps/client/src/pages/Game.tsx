@@ -95,51 +95,51 @@ const Game: React.FC = () => {
   const isMyTurn = roomState.activePlayerId === playerId;
 
   return (
-    <div className="h-screen w-screen bg-gray-900 overflow-hidden relative">
+    <div className="h-screen w-screen bg-gray-900 overflow-hidden relative flex flex-col">
       {roomState.phase === 'lobby' ? (
         <Lobby />
       ) : (
         <>
           {/* Main Game Area */}
-          <div className="h-full flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             {/* Table Area */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-h-0 flex items-center justify-center">
               <Table />
             </div>
 
             {/* Hand Area */}
-            <div className="h-48 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-gray-700">
+            <div className="h-40 sm:h-48 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-gray-700 flex-shrink-0">
               <Hand />
             </div>
 
             {/* Controls Area */}
-            <div className="h-20 bg-gray-900 border-t border-gray-700">
+            <div className="h-16 sm:h-20 bg-gray-900 border-t border-gray-700 flex-shrink-0">
               <Controls />
             </div>
           </div>
 
           {/* Game Info Overlay */}
-          <div className="absolute top-4 left-4 z-10">
-            <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-4 space-y-2">
-              <div className="text-white font-semibold">Room: {roomState.roomCode}</div>
-              <div className="text-gray-400 text-sm">Round: {roomState.round}</div>
-              <div className="text-gray-400 text-sm">
+          <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10">
+            <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-2 sm:p-4 space-y-1 sm:space-y-2">
+              <div className="text-white font-semibold text-sm sm:text-base">Room: {roomState.roomCode}</div>
+              <div className="text-gray-400 text-xs sm:text-sm">Round: {roomState.round}</div>
+              <div className="text-gray-400 text-xs sm:text-sm">
                 Players: {roomState.players.filter(p => p.status === 'active').length}
               </div>
               {isMyTurn && (
-                <div className="text-yellow-400 text-sm font-medium">Your Turn!</div>
+                <div className="text-yellow-400 text-xs sm:text-sm font-medium">Your Turn!</div>
               )}
             </div>
           </div>
 
           {/* Rules Button */}
-          <div className="absolute top-20 right-4 z-10">
+          <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10">
             <button
               onClick={() => setShowRulesModal(true)}
-              className="bg-gray-800/90 hover:bg-gray-700/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-gray-300 hover:text-white transition-colors"
+              className="bg-gray-800/90 hover:bg-gray-700/90 backdrop-blur-sm border border-gray-700 rounded-lg p-2 sm:p-3 text-gray-300 hover:text-white transition-colors"
               title="View Rules"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>

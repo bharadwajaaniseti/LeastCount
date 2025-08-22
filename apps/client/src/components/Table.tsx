@@ -63,147 +63,156 @@ const Table: React.FC = () => {
   });
 
   return (
-    <div className="h-full w-full relative flex items-center justify-center p-2 md:p-8 overflow-x-auto">
-      {/* Table Rim */}
-      <div className="table-rim w-full max-w-6xl aspect-[16/10] min-w-[340px] md:min-w-[600px] lg:min-w-[900px]">
-        {/* Table Felt */}
-        <div className="table-felt w-full h-full relative flex items-center justify-center">
-          {/* Joker Display */}
-          {roomState.currentJoker && (
-            <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col items-center gap-2 bg-yellow-600 bg-opacity-20 p-2 md:p-3 rounded-lg border border-yellow-400">
-              <div className="text-yellow-300 text-xs font-bold">JOKER</div>
-              <Card 
-                card={{ 
-                  id: 'joker-display', 
-                  rank: roomState.currentJoker, 
-                  suit: 'S' 
-                }} 
-                size="sm" 
-                className="transform scale-75" 
-              />
-              <div className="text-yellow-300 text-xs">Round {roomState.round}</div>
-            </div>
-          )}
-          {/* Center Area - Stock, Discard, Card Slot */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col md:flex-row items-center gap-2 md:gap-6 w-full max-w-xl">
-            {/* Stock Pile */}
-            <div className="flex flex-col items-center gap-1 md:gap-2">
-              <div className="text-white text-xs md:text-sm font-medium">Stock</div>
-              <div
-                className="relative cursor-pointer"
-                onClick={() => {
-                  if (roomState.phase === 'turn-draw' && stockCount > 0) {
-                    drawStock();
-                  }
-                }}
-              >
-                <Card faceDown size="lg" />
-                {stockCount > 0 && (
-                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
-                    {stockCount}
-                  </div>
-                )}
+    <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 lg:p-8">
+      {/* Table Container */}
+      <div className="relative w-full max-w-7xl mx-auto flex items-center justify-center">
+        {/* Table Rim */}
+        <div className="table-rim w-full aspect-[16/10] max-w-full max-h-full">
+          {/* Table Felt */}
+          <div className="table-felt w-full h-full relative flex items-center justify-center">
+            {/* Joker Display */}
+            {roomState.currentJoker && (
+              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex flex-col items-center gap-1 sm:gap-2 bg-yellow-600 bg-opacity-20 p-2 sm:p-3 rounded-lg border border-yellow-400 z-10">
+                <div className="text-yellow-300 text-xs font-bold">JOKER</div>
+                <Card 
+                  card={{ 
+                    id: 'joker-display', 
+                    rank: roomState.currentJoker, 
+                    suit: 'S' 
+                  }} 
+                  size="sm" 
+                  className="transform scale-75" 
+                />
+                <div className="text-yellow-300 text-xs">Round {roomState.round}</div>
               </div>
-            </div>
-            {/* Discard Pile */}
-            <div className="flex flex-col items-center gap-1 md:gap-2">
-              <div className="text-white text-xs md:text-sm font-medium">Discard</div>
-              <div className="relative">
-                {topDiscard && topDiscard.cards.length > 0 ? (
-                  <div className="flex -space-x-2 md:-space-x-4">
-                    {topDiscard.cards.map((card, index) => (
-                      <Card
-                        key={card.id}
-                        card={card}
-                        size="lg"
-                        className={`cursor-pointer transition-transform hover:scale-105 ${
-                          index === 0 || index === topDiscard.cards.length - 1
-                            ? 'hover:-translate-y-2'
-                            : ''
-                        }`}
-                        onClick={() => {
-                          if (roomState.phase === 'turn-draw') {
-                            if (index === 0) {
-                              drawDiscard('first');
-                            } else if (index === topDiscard.cards.length - 1) {
-                              drawDiscard('last');
-                            }
-                          }
-                        }}
-                      />
-                    ))}
+            )}
+
+            {/* Center Area - Stock, Discard, Card Slot */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 lg:gap-8">
+                {/* Stock Pile */}
+                <div className="flex flex-col items-center gap-1 sm:gap-2">
+                  <div className="text-white text-xs sm:text-sm font-medium">Stock</div>
+                  <div
+                    className="relative cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => {
+                      if (roomState.phase === 'turn-draw' && stockCount > 0) {
+                        drawStock();
+                      }
+                    }}
+                  >
+                    <Card faceDown size="lg" />
+                    {stockCount > 0 && (
+                      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+                        {stockCount}
+                      </div>
+                    )}
                   </div>
-                ) : (
+                </div>
+
+                {/* Discard Pile */}
+                <div className="flex flex-col items-center gap-1 sm:gap-2">
+                  <div className="text-white text-xs sm:text-sm font-medium">Discard</div>
+                  <div className="relative">
+                    {topDiscard && topDiscard.cards.length > 0 ? (
+                      <div className="flex -space-x-2 sm:-space-x-3 lg:-space-x-4">
+                        {topDiscard.cards.map((card, index) => (
+                          <Card
+                            key={card.id}
+                            card={card}
+                            size="lg"
+                            className={`cursor-pointer transition-transform hover:scale-105 ${
+                              index === 0 || index === topDiscard.cards.length - 1
+                                ? 'hover:-translate-y-2'
+                                : ''
+                            }`}
+                            onClick={() => {
+                              if (roomState.phase === 'turn-draw') {
+                                if (index === 0) {
+                                  drawDiscard('first');
+                                } else if (index === topDiscard.cards.length - 1) {
+                                  drawDiscard('last');
+                                }
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="card-slot">
+                        <div className="text-gray-500 text-xs">Empty</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Slot */}
+                <div className="flex flex-col items-center gap-1 sm:gap-2">
+                  <div className="text-white text-xs sm:text-sm font-medium">Card Slot</div>
                   <div className="card-slot">
-                    <div className="text-gray-500 text-xs">Empty</div>
+                    {cardSlotPreview && cardSlotPreview.length > 0 ? (
+                      <div className="flex -space-x-1 sm:-space-x-2">
+                        {cardSlotPreview.map((cardId) => {
+                          // Find the card in the current player's hand
+                          const currentPlayer = roomState.players.find(p => p.id === roomState.activePlayerId);
+                          const card = currentPlayer?.hand.find(c => c.id === cardId);
+                          return card ? (
+                            <Card
+                              key={cardId}
+                              card={card}
+                              size="md"
+                              className="transform scale-75"
+                            />
+                          ) : null;
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 text-xs text-center">
+                        Place cards<br />here
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
-            {/* Card Slot */}
-            <div className="flex flex-col items-center gap-1 md:gap-2">
-              <div className="text-white text-xs md:text-sm font-medium">Card Slot</div>
-              <div className="card-slot">
-                {cardSlotPreview && cardSlotPreview.length > 0 ? (
-                  <div className="flex -space-x-1 md:-space-x-2">
-                    {cardSlotPreview.map((cardId) => {
-                      // Find the card in the current player's hand
-                      const currentPlayer = roomState.players.find(p => p.id === roomState.activePlayerId);
-                      const card = currentPlayer?.hand.find(c => c.id === cardId);
-                      return card ? (
-                        <Card
-                          key={cardId}
-                          card={card}
-                          size="md"
-                          className="transform scale-75"
-                        />
-                      ) : null;
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-gray-500 text-xs text-center">
-                    Place cards<br />here
-                  </div>
-                )}
-              </div>
-            </div>
+
+            {/* Player Seats - Responsive arrangement */}
+            {playersWithOptimalPositions.map((player) => {
+              const displayPosition = player.displayPosition;
+              let seatClass = '';
+              switch (displayPosition) {
+                case 0:
+                  seatClass = 'absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2';
+                  break;
+                case 1:
+                  seatClass = 'absolute bottom-8 right-2 sm:bottom-16 sm:right-4 lg:bottom-24 lg:right-24';
+                  break;
+                case 2:
+                  seatClass = 'absolute right-2 top-1/2 transform -translate-y-1/2 sm:right-4 lg:right-8';
+                  break;
+                case 3:
+                  seatClass = 'absolute top-8 right-2 sm:top-16 sm:right-4 lg:top-24 lg:right-24';
+                  break;
+                case 4:
+                  seatClass = 'absolute top-2 sm:top-4 left-1/2 transform -translate-x-1/2';
+                  break;
+                case 5:
+                  seatClass = 'absolute top-8 left-2 sm:top-16 sm:left-4 lg:top-24 lg:left-24';
+                  break;
+                case 6:
+                  seatClass = 'absolute left-2 top-1/2 transform -translate-y-1/2 sm:left-4 lg:left-8';
+                  break;
+                case 7:
+                  seatClass = 'absolute bottom-8 left-2 sm:bottom-16 sm:left-4 lg:bottom-24 lg:left-24';
+                  break;
+              }
+              return (
+                <div key={player.id} className={`${seatClass} max-w-[100px] sm:max-w-[120px] lg:max-w-[180px]`}>
+                  <Seat playerId={player.id} />
+                </div>
+              );
+            })}
           </div>
-          {/* Player Seats - Responsive arrangement */}
-          {playersWithOptimalPositions.map((player) => {
-            const displayPosition = player.displayPosition;
-            let seatClass = '';
-            switch (displayPosition) {
-              case 0:
-                seatClass = 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
-                break;
-              case 1:
-                seatClass = 'absolute bottom-16 right-4 md:bottom-24 md:right-24';
-                break;
-              case 2:
-                seatClass = 'absolute right-4 top-1/2 transform -translate-y-1/2 md:right-8';
-                break;
-              case 3:
-                seatClass = 'absolute top-16 right-4 md:top-24 md:right-24';
-                break;
-              case 4:
-                seatClass = 'absolute top-0 left-1/2 transform -translate-x-1/2'; // Move top seat further up
-                break;
-              case 5:
-                seatClass = 'absolute top-16 left-4 md:top-24 md:left-24';
-                break;
-              case 6:
-                seatClass = 'absolute left-4 top-1/2 transform -translate-y-1/2 md:left-8';
-                break;
-              case 7:
-                seatClass = 'absolute bottom-16 left-4 md:bottom-24 md:left-24';
-                break;
-            }
-            return (
-              <div key={player.id} className={seatClass + ' max-w-[120px] md:max-w-[180px]'}>
-                <Seat playerId={player.id} />
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>
