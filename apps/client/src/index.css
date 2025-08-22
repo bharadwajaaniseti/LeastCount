@@ -1,8 +1,8 @@
+@import './responsive.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './responsive.css';
 
 @layer base {
   html, body {
@@ -16,7 +16,7 @@
 
 @layer components {
   .card {
-    @apply relative w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 border-gray-300 bg-white text-black 
+    @apply relative w-12 h-16 sm:w-16 sm:h-24 rounded-lg border-2 border-gray-300 bg-white text-black 
            flex items-center justify-center cursor-pointer transform transition-all duration-200
            shadow-card select-none;
   }
@@ -79,24 +79,6 @@
     .table-rim {
       padding: 20px;
     }
-  }
-    @apply border-yellow-400 ring-4 ring-yellow-400/50;
-    animation: timer-spin 30s linear infinite;
-  }
-  
-  .seat-empty {
-    @apply seat-avatar border-dashed border-gray-500 bg-gray-800/50 text-gray-500;
-  }
-  
-  .table-felt {
-    @apply relative bg-gradient-to-br from-felt-green-400 to-felt-green-600 
-           rounded-full shadow-table;
-  }
-  
-  .table-rim {
-    @apply absolute inset-0 rounded-full shadow-wood-rim;
-    background: linear-gradient(135deg, #8b4513 0%, #654321 50%, #4a2c17 100%);
-    padding: 20px;
   }
   
   .btn-primary {
