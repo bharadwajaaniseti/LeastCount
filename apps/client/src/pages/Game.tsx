@@ -95,7 +95,7 @@ const Game: React.FC = () => {
   const isMyTurn = roomState.activePlayerId === playerId;
 
   return (
-    <div className="h-screen w-screen bg-gray-900 overflow-hidden relative flex flex-col">
+    <div className="game-container">
       {roomState.phase === 'lobby' ? (
         <Lobby />
       ) : (
@@ -103,7 +103,7 @@ const Game: React.FC = () => {
           {/* Main Game Area */}
           <div className="flex-1 flex flex-col min-h-0">
             {/* Table Area */}
-            <div className="flex-1 relative min-h-0 flex items-center justify-center">
+            <div className="flex-1 relative min-h-0">
               <Table />
             </div>
 

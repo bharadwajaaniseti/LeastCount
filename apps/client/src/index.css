@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './responsive.css';
+
 @layer base {
   html, body {
     @apply h-full overflow-hidden;

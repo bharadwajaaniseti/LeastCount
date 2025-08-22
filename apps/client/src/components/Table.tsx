@@ -63,11 +63,9 @@ const Table: React.FC = () => {
   });
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 lg:p-8">
-      {/* Table Container */}
-      <div className="relative w-full max-w-7xl mx-auto flex items-center justify-center">
-        {/* Table Rim */}
-        <div className="table-rim w-full aspect-[16/10] max-w-full max-h-full">
+    <div className="table-container">
+      <div className="table-wrapper">
+        <div className="game-table table-rim">
           {/* Table Felt */}
           <div className="table-felt w-full h-full relative flex items-center justify-center">
             {/* Joker Display */}
