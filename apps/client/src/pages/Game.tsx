@@ -50,7 +50,11 @@ const Game: React.FC = () => {
 
   // Helper function to calculate hand total
   const calculateHandTotal = (hand: Card[]) => {
+    if (!hand || !Array.isArray(hand)) return 0;
+    
     return hand.reduce((total, card) => {
+      if (!card) return total;
+      
       // If card is the current joker rank, it counts as 0
       if (roomState?.currentJoker && card.rank === roomState.currentJoker) {
         return total + 0;
@@ -66,10 +70,26 @@ const Game: React.FC = () => {
   }, [connected, connect]);
 
   useEffect(() => {
+    // Store room code in localStorage to persist across refreshes
+    if (roomState?.roomCode) {
+      localStorage.setItem('leastcount_room', roomState.roomCode);
+    }
+  }, [roomState?.roomCode]);
+
+  useEffect(() => {
     if (!roomState && urlRoomCode) {
       // If we have a room code in URL but no room state, redirect to home
       // User probably refreshed the page or accessed directly
       navigate('/');
+    } else if (!roomState && !urlRoomCode) {
+      // Check if we have a stored room code from localStorage
+      const storedRoomCode = localStorage.getItem('leastcount_room');
+      if (storedRoomCode) {
+        // Try to navigate back to the stored room
+        navigate(`/game/${storedRoomCode}`);
+      } else {
+        navigate('/');
+      }
     }
   }, [roomState, urlRoomCode, navigate]);
 
@@ -160,7 +180,7 @@ const Game: React.FC = () => {
           </div>
 
           {/* Score and Hand Count Display */}
-          {currentPlayer && (
+          {currentPlayer && currentPlayer.hand && (
             <div className="absolute bottom-24 left-4 z-10">
               <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3 space-y-2">
                 <div>
@@ -169,8 +189,24 @@ const Game: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-gray-400 text-sm">Hand Count</div>
-                  <div className="text-yellow-400 text-lg font-bold">{calculateHandTotal(currentPlayer.hand)}</div>
+                  <div className="text-yellow-400 text-lg font-bold">
+                    {calculateHandTotal(currentPlayer.hand)}
+                  </div>
                 </div>
+                <div className="text-gray-500 text-xs">
+                  {currentPlayer.name} • {currentPlayer.hand.length} cards
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Debug Info - Remove this after testing */}
+          {!currentPlayer && (
+            <div className="absolute bottom-24 left-4 z-10">
+              <div className="bg-red-800/90 backdrop-blur-sm border border-red-700 rounded-lg p-3">
+                <div className="text-red-300 text-sm">No Current Player Found</div>
+                <div className="text-red-400 text-xs">Player ID: {playerId}</div>
+                <div className="text-red-400 text-xs">Players: {roomState.players.length}</div>
               </div>
             </div>
           )}

@@ -72,6 +72,15 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     socket.on('connect', () => {
       set({ connected: true, playerId: socket.id });
+      
+      // Try to restore room state from localStorage if available
+      const storedRoomCode = localStorage.getItem('leastcount_room');
+      const storedPlayerName = localStorage.getItem('leastcount_player_name');
+      
+      if (storedRoomCode && storedPlayerName) {
+        // Attempt to rejoin the stored room
+        socket.emit('room:join', { roomCode: storedRoomCode, name: storedPlayerName });
+      }
     });
 
     socket.on('disconnect', () => {
@@ -111,6 +120,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         selectedCardIds: [],
         selectionInfo: null 
       });
+      
+      // Clear stored room data
+      localStorage.removeItem('leastcount_room');
+      localStorage.removeItem('leastcount_player_name');
       
       // Optionally disconnect after a delay
       setTimeout(() => {
@@ -160,6 +173,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   createRoom: (name: string, eliminationPoints?: number) => {
     const { socket } = get();
     if (socket) {
+      // Store player name for potential rejoin
+      localStorage.setItem('leastcount_player_name', name);
       socket.emit('room:create', { name, eliminationPoints });
     }
   },
@@ -167,6 +182,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   joinRoom: (roomCode: string, name: string) => {
     const { socket } = get();
     if (socket) {
+      // Store player name for potential rejoin
+      localStorage.setItem('leastcount_player_name', name);
       socket.emit('room:join', { roomCode, name });
     }
   },
@@ -196,6 +213,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { socket, roomState } = get();
     if (socket && roomState) {
       socket.emit('room:exit', { roomCode: roomState.roomCode });
+      
+      // Clear stored room data when voluntarily exiting
+      localStorage.removeItem('leastcount_room');
+      localStorage.removeItem('leastcount_player_name');
     }
   },
 
