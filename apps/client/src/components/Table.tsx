@@ -30,7 +30,7 @@ const Table: React.FC = () => {
           
           {/* Joker Display */}
           {roomState.currentJoker && (
-            <div className="absolute top-4 left-4 flex flex-col items-center gap-2 bg-yellow-600 bg-opacity-20 p-3 rounded-lg border border-yellow-400">
+            <div className="absolute top-4 right-4 flex flex-col items-center gap-2 bg-yellow-600 bg-opacity-20 p-3 rounded-lg border border-yellow-400">
               <div className="text-yellow-300 text-xs font-bold">JOKER</div>
               <Card 
                 card={{ 

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/gameStore';
+import { Card, Rank } from '@least-count/shared';
 import Lobby from '@/components/Lobby';
 import Table from '@/components/Table';
 import Hand from '@/components/Hand';
@@ -25,6 +26,38 @@ const Game: React.FC = () => {
     viewScores,
     exitRoom
   } = useGameStore();
+
+  // Card values for scoring
+  const getCardValue = (rank: Rank): number => {
+    const values: Record<Rank, number> = {
+      'A': 1,
+      2: 2,
+      3: 3,
+      4: 4,
+      5: 5,
+      6: 6,
+      7: 7,
+      8: 8,
+      9: 9,
+      10: 10,
+      'J': 11,
+      'Q': 12,
+      'K': 13,
+      'JOKER': 0,
+    };
+    return values[rank] || 0;
+  };
+
+  // Helper function to calculate hand total
+  const calculateHandTotal = (hand: Card[]) => {
+    return hand.reduce((total, card) => {
+      // If card is the current joker rank, it counts as 0
+      if (roomState?.currentJoker && card.rank === roomState.currentJoker) {
+        return total + 0;
+      }
+      return total + getCardValue(card.rank);
+    }, 0);
+  };
 
   useEffect(() => {
     if (!connected) {
@@ -114,7 +147,7 @@ const Game: React.FC = () => {
           </div>
 
           {/* Rules Button */}
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-20 right-4 z-10">
             <button
               onClick={() => setShowRulesModal(true)}
               className="bg-gray-800/90 hover:bg-gray-700/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-gray-300 hover:text-white transition-colors"
@@ -126,12 +159,18 @@ const Game: React.FC = () => {
             </button>
           </div>
 
-          {/* Score Display */}
+          {/* Score and Hand Count Display */}
           {currentPlayer && (
             <div className="absolute bottom-24 left-4 z-10">
-              <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3">
-                <div className="text-gray-400 text-sm">Your Score</div>
-                <div className="text-white text-xl font-bold">{currentPlayer.score || 0}</div>
+              <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3 space-y-2">
+                <div>
+                  <div className="text-gray-400 text-sm">Your Score</div>
+                  <div className="text-white text-xl font-bold">{currentPlayer.score || 0}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm">Hand Count</div>
+                  <div className="text-yellow-400 text-lg font-bold">{calculateHandTotal(currentPlayer.hand)}</div>
+                </div>
               </div>
             </div>
           )}

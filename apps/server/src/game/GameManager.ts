@@ -404,30 +404,47 @@ export class GameManager {
 
   private resolveShow(room: RoomState, callerId: string, isValid: boolean) {
     const scores: Record<string, number> = {};
+    const caller = room.players.find(p => p.id === callerId)!;
+    const callerHandTotal = this.validator.calculateHandTotal(caller.hand);
     
-    // Calculate round scores and add to player totals
+    // Calculate all hand totals first
+    const handTotals: Record<string, number> = {};
     for (const player of room.players) {
-      const handTotal = this.validator.calculateHandTotal(player.hand);
-      scores[player.id] = handTotal;
-      
+      handTotals[player.id] = this.validator.calculateHandTotal(player.hand);
+    }
+    
+    // Find minimum hand total among all players
+    const minHandTotal = Math.min(...Object.values(handTotals));
+    
+    // Determine if caller actually has the lowest count
+    const callerHasLowest = callerHandTotal === minHandTotal;
+    
+    // Calculate round scores based on new rules
+    for (const player of room.players) {
       // Initialize round scores array if not exists
       if (!player.roundScores) {
         player.roundScores = [];
       }
       
-      // Add this round's score
-      player.roundScores.push(handTotal);
-      player.score = (player.score || 0) + handTotal;
-    }
-
-    if (!isValid) {
-      // Apply penalty to caller
-      const caller = room.players.find(p => p.id === callerId);
-      if (caller) {
-        caller.score = (caller.score || 0) + room.rules.badDeclarePenalty;
-        // Add penalty to round scores
-        if (caller.roundScores) {
-          caller.roundScores[caller.roundScores.length - 1] += room.rules.badDeclarePenalty;
+      if (callerHasLowest) {
+        // Caller wins: caller gets 0, others get their actual count
+        if (player.id === callerId) {
+          scores[player.id] = 0;
+          player.roundScores.push(0);
+        } else {
+          scores[player.id] = handTotals[player.id];
+          player.roundScores.push(handTotals[player.id]);
+          player.score = (player.score || 0) + handTotals[player.id];
+        }
+      } else {
+        // Caller doesn't have lowest: caller gets 40 penalty, others get 0
+        if (player.id === callerId) {
+          scores[player.id] = 40;
+          player.roundScores.push(40);
+          player.score = (player.score || 0) + 40;
+        } else {
+          scores[player.id] = 0;
+          player.roundScores.push(0);
         }
       }
     }
