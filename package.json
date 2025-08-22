@@ -3,18 +3,18 @@
   "version": "1.0.0",
   "description": "Least Count card game with React frontend and Socket.io backend",
   "scripts": {
-    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
-    "dev:client": "cd apps/client && pnpm dev",
-    "dev:server": "cd apps/server && pnpm dev",
-    "build": "pnpm run build:shared && pnpm run build:client && pnpm run build:server",
-    "build:shared": "cd packages/shared && pnpm build",
-    "build:client": "cd apps/client && pnpm build",
-    "build:server": "cd apps/server && pnpm build",
-    "lint": "pnpm run lint:client && pnpm run lint:server",
-    "lint:client": "cd apps/client && pnpm lint",
-    "lint:server": "cd apps/server && pnpm lint",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd apps/client && npm run dev",
+    "dev:server": "cd apps/server && npm run dev",
+    "build": "npm run build:shared && npm run build:client && npm run build:server",
+    "build:shared": "cd packages/shared && npm run build",
+    "build:client": "cd apps/client && npm run build",
+    "build:server": "cd apps/server && npm run build",
+    "lint": "npm run lint:client && npm run lint:server",
+    "lint:client": "cd apps/client && npm run lint",
+    "lint:server": "cd apps/server && npm run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "install:all": "pnpm install && cd apps/client && pnpm install && cd ../server && pnpm install && cd ../../packages/shared && pnpm install"
+    "install:all": "npm install && cd apps/client && npm install && cd ../server && npm install && cd ../../packages/shared && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
@@ -25,6 +25,6 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+    "npm": ">=8.0.0"
   }
 }

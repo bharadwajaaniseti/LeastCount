@@ -51,8 +51,134 @@ npm start
 
 ## 🎮 Access the Game
 
-- **Client**: http://localhost:5173
+- **Client**: http://localhost:5173 (or 5174 if port conflict)
 - **Server**: http://localhost:3001 (API only)
+
+## 🌐 Production Deployment
+
+### 🚀 Deploy Server to Render
+
+1. **Create render.yaml in project root:**
+```yaml
+services:
+  - type: web
+    name: least-count-server
+    env: node
+    plan: free
+    buildCommand: cd packages/shared && npm run build && cd ../../apps/server && npm run build
+    startCommand: cd apps/server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+```
+
+2. **Push to GitHub and connect to Render:**
+   - Create a GitHub repository
+   - Push your code: `git add . && git commit -m "Initial commit" && git push`
+   - Go to [render.com](https://render.com) and connect your GitHub repo
+   - Render will auto-deploy using the render.yaml configuration
+
+3. **Note your server URL** (e.g., `https://least-count-server.onrender.com`)
+
+### 🌐 Deploy Client to Netlify
+
+1. **Update client environment for production:**
+   Create `apps/client/.env.production`:
+   ```
+   VITE_SERVER_URL=https://your-render-server-url.onrender.com
+   ```
+
+2. **Create netlify.toml in project root:**
+   ```toml
+   [build]
+     base = "apps/client"
+     command = "cd ../../packages/shared && npm run build && cd ../../apps/client && npm run build"
+     publish = "dist"
+
+   [[redirects]]
+     from = "/*"
+     to = "/index.html"
+     status = 200
+   ```
+
+3. **Deploy to Netlify:**
+   - Go to [netlify.com](https://netlify.com) and connect your GitHub repo
+   - Set build settings to use the netlify.toml configuration
+   - Deploy will happen automatically
+
+### 🔄 Update Client for Production Server
+
+Update `apps/client/src/store/gameStore.ts` to use environment variable:
+```typescript
+const socket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:3001', {
+  transports: ['websocket'],
+});
+```
+
+## 📋 Step-by-Step Deployment Guide
+
+### Step 1: Prepare Your Repository
+```powershell
+# Initialize git if not done
+git init
+git add .
+git commit -m "Initial commit"
+
+# Create GitHub repository and push
+git remote add origin https://github.com/yourusername/least-count.git
+git push -u origin main
+```
+
+### Step 2: Deploy Server to Render
+1. Go to [render.com](https://render.com) and sign up/login
+2. Click "New +" → "Web Service"
+3. Connect your GitHub repository
+4. Render will automatically detect the `render.yaml` configuration
+5. Click "Create Web Service"
+6. Wait for deployment (5-10 minutes)
+7. **Copy your server URL** (e.g., `https://least-count-server.onrender.com`)
+
+### Step 3: Update Environment Variables
+1. **Update client environment:**
+   - Edit `apps/client/.env.production`
+   - Replace `https://your-render-server-url.onrender.com` with your actual Render URL
+
+2. **Update server CORS:**
+   - Edit `apps/server/src/index.ts`
+   - Replace `https://your-netlify-domain.netlify.app` with your future Netlify domain
+
+### Step 4: Deploy Client to Netlify
+1. Go to [netlify.com](https://netlify.com) and sign up/login
+2. Click "Add new site" → "Import an existing project"
+3. Connect your GitHub repository
+4. Netlify will auto-detect the `netlify.toml` configuration
+5. Click "Deploy site"
+6. Wait for deployment (3-5 minutes)
+7. **Copy your Netlify URL** (e.g., `https://amazing-name-123456.netlify.app`)
+
+### Step 5: Final Configuration Update
+1. **Update server CORS with actual Netlify domain:**
+   ```typescript
+   origin: process.env.NODE_ENV === 'production' 
+     ? ['https://amazing-name-123456.netlify.app'] // Your actual Netlify URL
+     : ['http://localhost:5173', 'http://localhost:5174']
+   ```
+
+2. **Commit and push changes:**
+   ```powershell
+   git add .
+   git commit -m "Update production URLs"
+   git push
+   ```
+
+3. **Redeploy** (both services will auto-redeploy from GitHub)
+
+### 🎯 Free Tier Limitations
+- **Render Free**: 750 hours/month, sleeps after 15 minutes of inactivity
+- **Netlify Free**: 100GB bandwidth/month, 300 build minutes/month
+
+### 🔄 Auto-Deployments
+Both platforms will automatically redeploy when you push to your main branch!
 
 ## 🤖 Bot Testing
 

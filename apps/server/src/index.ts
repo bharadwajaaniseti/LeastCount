@@ -11,8 +11,8 @@ const httpServer = createServer(app);
 // Configure CORS
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com'] // Replace with your production domain
-    : ['http://localhost:5173'],
+    ? ['https://your-netlify-domain.netlify.app'] // Replace with your Netlify domain
+    : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
 
@@ -20,8 +20,8 @@ app.use(cors({
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
-      ? ['https://your-domain.com'] // Replace with your production domain
-      : ['http://localhost:5173'],
+      ? ['https://your-netlify-domain.netlify.app'] // Replace with your Netlify domain
+      : ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true
   }
 });
