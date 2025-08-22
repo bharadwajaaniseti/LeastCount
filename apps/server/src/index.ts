@@ -60,6 +60,15 @@ io.on('connection', (socket) => {
     gameManager.updateRules(socket, data);
   });
 
+  socket.on('room:exit', (data) => {
+    gameManager.handleExitRoom(socket, data);
+  });
+
+  // Game actions
+  socket.on('game:viewScores', (data) => {
+    gameManager.handleViewScores(socket, data);
+  });
+
   // Turn actions
   socket.on('turn:discard', (data) => {
     gameManager.handleDiscard(socket, data);

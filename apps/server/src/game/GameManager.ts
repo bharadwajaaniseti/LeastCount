@@ -10,6 +10,7 @@ import {
   DEFAULT_RULES,
   GamePhase,
   ValidationResult,
+  Rank,
 } from '@least-count/shared';
 import { Deck } from './Deck';
 import { GameValidator } from './GameValidator';
@@ -119,6 +120,8 @@ export class GameManager {
     }
 
     this.dealCards(room);
+    this.setRoundJoker(room);
+    this.setRoundFirstPlayer(room);
     this.io.to(data.roomCode).emit('game:started');
     this.startTurn(room);
   }
@@ -299,16 +302,24 @@ export class GameManager {
     // Only single cards can trigger skip draw for now (can be extended for sets/runs)
     if (newDiscard.type !== 'single' || previousDiscard.type !== 'single') return false;
     
-    // Check if the ranks match (ignoring suit)
-    const previousRank = previousDiscard.cards[0].rank;
-    const newRank = newDiscard.cards[0].rank;
+    const previousCard = previousDiscard.cards[0];
+    const newCard = newDiscard.cards[0];
     
-    return previousRank === newRank;
+    // Check if the ranks match (ignoring suit) OR exact same card (rank + suit)
+    const rankMatch = previousCard.rank === newCard.rank;
+    const exactMatch = previousCard.rank === newCard.rank && previousCard.suit === newCard.suit;
+    
+    return rankMatch || exactMatch;
   }
 
   private dealCards(room: RoomState) {
     this.deck.reset();
     this.deck.shuffle();
+
+    // Clear all players' hands first
+    for (const player of room.players) {
+      player.hand = [];
+    }
 
     // Deal cards to each player
     for (let i = 0; i < room.rules.handSize; i++) {
@@ -323,6 +334,30 @@ export class GameManager {
     // Set up stock
     room.stockCount = this.deck.remainingCards();
     room.phase = 'turn-discard';
+  }
+
+  private setRoundJoker(room: RoomState) {
+    // Joker rotation: A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
+    const jokerSequence: Rank[] = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'];
+    const jokerIndex = (room.round - 1) % jokerSequence.length;
+    room.currentJoker = jokerSequence[jokerIndex];
+  }
+
+  private setRoundFirstPlayer(room: RoomState) {
+    const activePlayers = room.players.filter(p => p.status === 'active');
+    if (activePlayers.length === 0) return;
+
+    // If no first player set yet (first game), start with first active player
+    if (!room.firstPlayerId) {
+      room.firstPlayerId = activePlayers[0].id;
+    } else {
+      // Find current first player and move to next active player
+      const currentFirstIndex = activePlayers.findIndex(p => p.id === room.firstPlayerId);
+      const nextIndex = (currentFirstIndex + 1) % activePlayers.length;
+      room.firstPlayerId = activePlayers[nextIndex].id;
+    }
+    
+    room.activePlayerId = room.firstPlayerId;
   }
 
   private startTurn(room: RoomState) {
@@ -370,9 +405,18 @@ export class GameManager {
   private resolveShow(room: RoomState, callerId: string, isValid: boolean) {
     const scores: Record<string, number> = {};
     
+    // Calculate round scores and add to player totals
     for (const player of room.players) {
       const handTotal = this.validator.calculateHandTotal(player.hand);
       scores[player.id] = handTotal;
+      
+      // Initialize round scores array if not exists
+      if (!player.roundScores) {
+        player.roundScores = [];
+      }
+      
+      // Add this round's score
+      player.roundScores.push(handTotal);
       player.score = (player.score || 0) + handTotal;
     }
 
@@ -381,6 +425,10 @@ export class GameManager {
       const caller = room.players.find(p => p.id === callerId);
       if (caller) {
         caller.score = (caller.score || 0) + room.rules.badDeclarePenalty;
+        // Add penalty to round scores
+        if (caller.roundScores) {
+          caller.roundScores[caller.roundScores.length - 1] += room.rules.badDeclarePenalty;
+        }
       }
     }
 
@@ -404,7 +452,9 @@ export class GameManager {
       room.phase = 'game-over';
     } else {
       room.round++;
+      this.setRoundFirstPlayer(room); // Rotate starting player
       this.dealCards(room);
+      this.setRoundJoker(room); // Set new joker for round
       this.startTurn(room);
     }
 
@@ -484,6 +534,59 @@ export class GameManager {
     // Notify all players of rule changes
     this.io.to(data.roomCode).emit('room:rulesUpdated', { rules: room.rules });
     this.io.to(data.roomCode).emit('room:state', room);
+  }
+
+  handleExitRoom(socket: TypedSocket, data: { roomCode: string }) {
+    const room = this.rooms.get(data.roomCode);
+    
+    if (!room) {
+      socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+      return;
+    }
+
+    // Remove player from room
+    const playerIndex = room.players.findIndex(p => p.id === socket.id);
+    if (playerIndex === -1) return;
+
+    const leavingPlayer = room.players[playerIndex];
+    room.players.splice(playerIndex, 1);
+    this.playerRooms.delete(socket.id);
+
+    // If the leaving player was host, assign new host or end room
+    if (leavingPlayer.isHost) {
+      if (room.players.length > 0) {
+        room.players[0].isHost = true;
+        room.hostId = room.players[0].id;
+      } else {
+        // No players left, delete room
+        this.rooms.delete(data.roomCode);
+        return;
+      }
+    }
+
+    socket.leave(data.roomCode);
+    this.io.to(data.roomCode).emit('room:state', room);
+  }
+
+  handleViewScores(socket: TypedSocket, data: { roomCode: string }) {
+    const room = this.rooms.get(data.roomCode);
+    
+    if (!room) {
+      socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+      return;
+    }
+
+    // Build round scores data
+    const roundScores: Record<string, number[]> = {};
+    
+    for (const player of room.players) {
+      roundScores[player.id] = player.roundScores || [];
+    }
+
+    socket.emit('game:scores', { 
+      players: room.players,
+      roundScores 
+    });
   }
 
   handleDisconnect(socket: TypedSocket) {

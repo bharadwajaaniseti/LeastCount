@@ -92,6 +92,32 @@ const Controls: React.FC = () => {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
+        {/* Score Button */}
+        <button
+          onClick={() => {
+            // This will be handled by parent component
+            const event = new CustomEvent('showScores');
+            window.dispatchEvent(event);
+          }}
+          className="btn-secondary px-4 py-2"
+          title="View Scores"
+        >
+          Score
+        </button>
+
+        {/* Exit Button */}
+        <button
+          onClick={() => {
+            // This will be handled by parent component
+            const event = new CustomEvent('exitGame');
+            window.dispatchEvent(event);
+          }}
+          className="btn-danger px-4 py-2"
+          title="Exit Game"
+        >
+          Exit
+        </button>
+
         {/* Show Button */}
         <button
           onClick={show}

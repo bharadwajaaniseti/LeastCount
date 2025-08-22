@@ -24,6 +24,8 @@ interface GameState {
   selectedCardIds: string[];
   selectionInfo: SelectionInfo | null;
   showRulesModal: boolean;
+  showScoresModal: boolean;
+  scoresData: { players: any[]; roundScores: Record<string, number[]> } | null;
   error: string | null;
   
   // Actions
@@ -34,6 +36,9 @@ interface GameState {
   startGame: () => void;
   endRoom: () => void;
   updateRules: (rules: Partial<Rules>) => void;
+  exitRoom: () => void;
+  viewScores: () => void;
+  setShowScoresModal: (show: boolean) => void;
   selectCard: (cardId: string) => void;
   confirmDiscard: () => void;
   drawStock: () => void;
@@ -54,6 +59,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   selectedCardIds: [],
   selectionInfo: null,
   showRulesModal: false,
+  showScoresModal: false,
+  scoresData: null,
   error: null,
 
   // Actions
@@ -124,6 +131,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     });
 
+    socket.on('game:scores', ({ players, roundScores }) => {
+      set({ 
+        scoresData: { players, roundScores },
+        showScoresModal: true 
+      });
+    });
+
     set({ socket });
   },
 
@@ -175,6 +189,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { socket, roomState } = get();
     if (socket && roomState) {
       socket.emit('room:updateRules', { roomCode: roomState.roomCode, rules });
+    }
+  },
+
+  exitRoom: () => {
+    const { socket, roomState } = get();
+    if (socket && roomState) {
+      socket.emit('room:exit', { roomCode: roomState.roomCode });
+    }
+  },
+
+  viewScores: () => {
+    const { socket, roomState } = get();
+    if (socket && roomState) {
+      socket.emit('game:viewScores', { roomCode: roomState.roomCode });
     }
   },
 
@@ -246,6 +274,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setShowRulesModal: (show: boolean) => {
     set({ showRulesModal: show });
+  },
+
+  setShowScoresModal: (show: boolean) => {
+    set({ showScoresModal: show });
   },
 
   clearError: () => {

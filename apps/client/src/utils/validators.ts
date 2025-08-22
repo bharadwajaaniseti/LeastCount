@@ -51,25 +51,11 @@ export function validateSelection(cards: Card[]): SelectionInfo {
     };
   }
 
-  if (isValidRun(cards)) {
-    const suit = cards.find(c => c.suit)?.suit || '?';
-    const sortedCards = sortRunCards(cards);
-    const minRank = getNumericRank(sortedCards[0].rank);
-    const maxRank = getNumericRank(sortedCards[sortedCards.length - 1].rank);
-    
-    return {
-      type: 'run',
-      cards: sortedCards,
-      isValid: true,
-      description: `✅ RUN ${getSuitSymbol(suit)} ${rankToString(minRank)}–${rankToString(maxRank)}`,
-    };
-  }
-
   return {
     type: 'invalid',
     cards: [...cards],
     isValid: false,
-    description: '❌ Invalid combination',
+    description: '❌ Invalid combination - only single cards and sets allowed',
   };
 }
 
@@ -86,70 +72,4 @@ function isValidSet(cards: Card[]): boolean {
   // All cards must have same rank
   const rank = cards[0].rank;
   return cards.every(c => c.rank === rank);
-}
-
-function isValidRun(cards: Card[]): boolean {
-  if (cards.length < 3) return false;
-
-  // All non-joker cards must have same suit
-  const nonJokers = cards.filter(c => c.rank !== 'JOKER');
-  if (nonJokers.length === 0) return false; // Can't have all jokers
-
-  const suit = nonJokers[0].suit;
-  if (!nonJokers.every(c => c.suit === suit)) return false;
-
-  // Sort cards by rank
-  const sortedCards = sortRunCards(cards);
-  
-  // Check if cards form a consecutive sequence
-  const ranks = sortedCards.map(c => getNumericRank(c.rank));
-  
-  for (let i = 1; i < ranks.length; i++) {
-    if (ranks[i] !== ranks[i - 1] + 1) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-function sortRunCards(cards: Card[]): Card[] {
-  return [...cards].sort((a, b) => {
-    const rankA = getNumericRank(a.rank);
-    const rankB = getNumericRank(b.rank);
-    return rankA - rankB;
-  });
-}
-
-function getNumericRank(rank: Rank): number {
-  if (typeof rank === 'number') return rank;
-  
-  switch (rank) {
-    case 'A': return 1;
-    case 'J': return 11;
-    case 'Q': return 12;
-    case 'K': return 13;
-    case 'JOKER': return 0; // Jokers will be handled specially
-    default: return 0;
-  }
-}
-
-function rankToString(numericRank: number): string {
-  switch (numericRank) {
-    case 1: return 'A';
-    case 11: return 'J';
-    case 12: return 'Q';
-    case 13: return 'K';
-    default: return numericRank.toString();
-  }
-}
-
-function getSuitSymbol(suit: string): string {
-  switch (suit) {
-    case 'S': return '♠';
-    case 'H': return '♥';
-    case 'D': return '♦';
-    case 'C': return '♣';
-    default: return suit;
-  }
 }

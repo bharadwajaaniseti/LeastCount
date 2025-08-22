@@ -19,17 +19,12 @@ export class GameValidator {
       return { valid: true };
     }
 
-    // Check for set
+    // Check for set only (runs are not allowed)
     if (this.isValidSet(cards)) {
       return { valid: true };
     }
 
-    // Check for run
-    if (this.isValidRun(cards)) {
-      return { valid: true };
-    }
-
-    return { valid: false, error: 'Invalid combination - must be single card, set, or run' };
+    return { valid: false, error: 'Invalid combination - must be single card or set only' };
   }
 
   createDiscardGroup(cards: Card[]): DiscardGroup {
@@ -49,17 +44,7 @@ export class GameValidator {
       };
     }
 
-    if (this.isValidRun(cards)) {
-      // Sort run cards in ascending order
-      const sortedCards = this.sortRunCards(cards);
-      return {
-        type: 'run',
-        cards: sortedCards,
-        ordered: true,
-      };
-    }
-
-    throw new Error('Invalid discard group');
+    throw new Error('Invalid discard group - only single cards and sets allowed');
   }
 
   classifySelection(cards: Card[]): SelectionInfo {
@@ -91,25 +76,11 @@ export class GameValidator {
       };
     }
 
-    if (this.isValidRun(cards)) {
-      const suit = cards.find(c => c.suit)?.suit || '?';
-      const sortedCards = this.sortRunCards(cards);
-      const minRank = this.getNumericRank(sortedCards[0].rank);
-      const maxRank = this.getNumericRank(sortedCards[sortedCards.length - 1].rank);
-      
-      return {
-        type: 'run',
-        cards: sortedCards,
-        isValid: true,
-        description: `RUN ${suit} ${this.rankToString(minRank)}–${this.rankToString(maxRank)}`,
-      };
-    }
-
     return {
       type: 'invalid',
       cards: [...cards],
       isValid: false,
-      description: 'Invalid combination',
+      description: 'Invalid combination - only single cards and sets allowed',
     };
   }
 

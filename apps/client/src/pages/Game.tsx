@@ -6,6 +6,7 @@ import Table from '@/components/Table';
 import Hand from '@/components/Hand';
 import Controls from '@/components/Controls';
 import RulesModal from '@/components/RulesModal';
+import ScoreView from '@/components/ScoreView';
 
 const Game: React.FC = () => {
   const { roomCode: urlRoomCode } = useParams();
@@ -17,7 +18,12 @@ const Game: React.FC = () => {
     connected, 
     connect,
     showRulesModal,
-    setShowRulesModal
+    setShowRulesModal,
+    showScoresModal,
+    setShowScoresModal,
+    scoresData,
+    viewScores,
+    exitRoom
   } = useGameStore();
 
   useEffect(() => {
@@ -33,6 +39,27 @@ const Game: React.FC = () => {
       navigate('/');
     }
   }, [roomState, urlRoomCode, navigate]);
+
+  useEffect(() => {
+    const handleShowScores = () => {
+      viewScores();
+    };
+
+    const handleExitGame = () => {
+      if (confirm('Are you sure you want to exit the game?')) {
+        exitRoom();
+        navigate('/');
+      }
+    };
+
+    window.addEventListener('showScores', handleShowScores);
+    window.addEventListener('exitGame', handleExitGame);
+
+    return () => {
+      window.removeEventListener('showScores', handleShowScores);
+      window.removeEventListener('exitGame', handleExitGame);
+    };
+  }, [viewScores, exitRoom, navigate]);
 
   if (!roomState || !playerId) {
     return (
@@ -113,6 +140,14 @@ const Game: React.FC = () => {
 
       {/* Rules Modal */}
       {showRulesModal && <RulesModal />}
+
+      {/* Scores Modal */}
+      {showScoresModal && scoresData && (
+        <ScoreView 
+          isOpen={showScoresModal}
+          onClose={() => setShowScoresModal(false)}
+        />
+      )}
     </div>
   );
 };

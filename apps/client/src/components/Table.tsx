@@ -28,6 +28,23 @@ const Table: React.FC = () => {
         {/* Table Felt */}
         <div className="table-felt w-full h-full relative flex items-center justify-center">
           
+          {/* Joker Display */}
+          {roomState.currentJoker && (
+            <div className="absolute top-4 left-4 flex flex-col items-center gap-2 bg-yellow-600 bg-opacity-20 p-3 rounded-lg border border-yellow-400">
+              <div className="text-yellow-300 text-xs font-bold">JOKER</div>
+              <Card 
+                card={{ 
+                  id: 'joker-display', 
+                  rank: roomState.currentJoker, 
+                  suit: 'S' 
+                }} 
+                size="sm" 
+                className="transform scale-75" 
+              />
+              <div className="text-yellow-300 text-xs">Round {roomState.round}</div>
+            </div>
+          )}
+          
           {/* Center Area - Stock, Discard, Card Slot */}
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 flex items-center gap-6">
             {/* Stock Pile */}

@@ -17,6 +17,7 @@ export interface Player {
   hand: Card[];
   isHost: boolean;
   score?: number;
+  roundScores?: number[]; // Score for each round
 }
 
 export type DiscardType = 'single' | 'set' | 'run';
@@ -54,6 +55,8 @@ export interface RoomState {
     hasDiscarded: boolean;
     hasDrawn: boolean;
   };
+  currentJoker?: Rank; // Current round's joker rank
+  firstPlayerId?: string; // Player who starts each round
 }
 
 // Socket event types
@@ -62,7 +65,9 @@ export interface ClientToServerEvents {
   'room:join': (data: { roomCode: string; name: string }) => void;
   'room:end': (data: { roomCode: string }) => void;
   'room:updateRules': (data: { roomCode: string; rules: Partial<Rules> }) => void;
+  'room:exit': (data: { roomCode: string }) => void;
   'game:start': (data: { roomCode: string }) => void;
+  'game:viewScores': (data: { roomCode: string }) => void;
   'turn:discard': (data: { roomCode: string; cardIds: string[] }) => void;
   'turn:drawStock': (data: { roomCode: string }) => void;
   'turn:drawDiscard': (data: { roomCode: string; end: 'first' | 'last' }) => void;
@@ -75,6 +80,7 @@ export interface ServerToClientEvents {
   'room:ended': (data: { reason: string; hostLeft?: boolean }) => void;
   'room:rulesUpdated': (data: { rules: Rules }) => void;
   'game:started': () => void;
+  'game:scores': (data: { players: Player[]; roundScores: Record<string, number[]> }) => void;
   'turn:begin': (data: { playerId: string; canShow: boolean }) => void;
   'turn:updated': (data: { 
     discardGroup?: DiscardGroup; 
