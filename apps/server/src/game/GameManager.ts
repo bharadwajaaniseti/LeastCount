@@ -302,11 +302,17 @@ export class GameManager {
     const activePlayers = room.players.filter(p => p.status === 'active');
     if (activePlayers.length === 0) return;
 
-    room.activePlayerId = activePlayers[0].id;
+    // Only set activePlayerId if it's not already set (first turn of the game)
+    if (!room.activePlayerId) {
+      room.activePlayerId = activePlayers[0].id;
+    }
+    
     room.phase = 'turn-discard';
     
     // Check if player can show (hand total <= threshold)
-    const activePlayer = activePlayers[0];
+    const activePlayer = activePlayers.find(p => p.id === room.activePlayerId);
+    if (!activePlayer) return;
+    
     const handTotal = this.validator.calculateHandTotal(activePlayer.hand);
     room.canShow = handTotal <= room.rules.declareThreshold;
     room.turnActions = { hasDiscarded: false, hasDrawn: false };
