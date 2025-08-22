@@ -31,7 +31,8 @@ const gameManager = new GameManager(io);
 
 // Basic health check endpoint
 app.get('/health',( _req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    // @ts-ignore
+  res.json(  { status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Socket connection handling
