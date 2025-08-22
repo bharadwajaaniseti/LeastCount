@@ -108,12 +108,12 @@ const Game: React.FC = () => {
             </div>
 
             {/* Hand Area */}
-            <div className="h-40 sm:h-48 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-gray-700 flex-shrink-0">
+            <div className="h-32 sm:h-40 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-gray-700 flex-shrink-0">
               <Hand />
             </div>
 
             {/* Controls Area */}
-            <div className="h-16 sm:h-20 bg-gray-900 border-t border-gray-700 flex-shrink-0">
+            <div className="h-20 sm:h-24 bg-gray-900 border-t border-gray-700 flex-shrink-0 flex items-center justify-center">
               <Controls />
             </div>
           </div>

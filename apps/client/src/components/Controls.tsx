@@ -57,29 +57,29 @@ const Controls: React.FC = () => {
                   roomState.turnActions?.hasDrawn;
 
   return (
-    <div className="h-full flex items-center justify-between px-6">
-      {/* Left Side: Game Info & Utility Buttons */}
-      <div className="flex items-center gap-6">
-        {/* Game Phase Indicator */}
-        <div className="flex flex-col">
-          <div className="text-gray-400 text-sm">Phase</div>
-          <div className="text-white font-medium capitalize">
+    <div className="h-full flex items-center justify-between px-4 py-2 max-w-full overflow-hidden">
+      {/* Left Side: Game Info & Essential Buttons */}
+      <div className="flex items-center gap-3">
+        {/* Game Phase Indicator - Compact */}
+        <div className="text-center min-w-0">
+          <div className="text-gray-400 text-xs">Phase</div>
+          <div className="text-white text-sm font-medium capitalize truncate">
             {roomState.phase.replace('-', ' ')}
           </div>
           {isMyTurn && (
-            <div className="text-yellow-400 text-sm">Your turn</div>
+            <div className="text-yellow-400 text-xs">Your turn</div>
           )}
         </div>
 
-        {/* Utility Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Essential Buttons */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => {
               // This will be handled by parent component
               const event = new CustomEvent('showScores');
               window.dispatchEvent(event);
             }}
-            className="btn-secondary px-4 py-2 text-sm"
+            className="btn-secondary px-3 py-1 text-sm"
             title="View Scores"
           >
             Score
@@ -91,7 +91,7 @@ const Controls: React.FC = () => {
               const event = new CustomEvent('exitGame');
               window.dispatchEvent(event);
             }}
-            className="btn-danger px-4 py-2 text-sm"
+            className="btn-danger px-3 py-1 text-sm"
             title="Exit Game"
           >
             Exit
@@ -99,34 +99,37 @@ const Controls: React.FC = () => {
         </div>
       </div>
 
-      {/* Draw Instructions */}
-      {isMyTurn && roomState.phase === 'turn-draw' && (
-        <div className="text-center text-gray-300 text-sm">
-          <div>Draw a card:</div>
-          <div className="text-xs text-gray-400 mt-1">
-            D = Stock • F = First discard • L = Last discard
+      {/* Center: Status Messages */}
+      <div className="flex-1 text-center mx-4 min-w-0">
+        {/* Draw Instructions */}
+        {isMyTurn && roomState.phase === 'turn-draw' && (
+          <div className="text-gray-300 text-sm">
+            <div className="truncate">Draw a card</div>
+            <div className="text-xs text-gray-400">
+              D=Stock • F=First • L=Last
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Skip Draw Notification */}
-      {isMyTurn && roomState.phase === 'await-move' && 
-       roomState.turnActions?.hasDiscarded && roomState.turnActions?.hasDrawn && (
-        <div className="text-center text-green-400 text-sm">
-          <div className="flex items-center gap-2">
-            <span>🎯</span>
-            <span>Matching discard! Draw skipped</span>
+        {/* Skip Draw Notification */}
+        {isMyTurn && roomState.phase === 'await-move' && 
+         roomState.turnActions?.hasDiscarded && roomState.turnActions?.hasDrawn && (
+          <div className="text-green-400 text-sm">
+            <div className="flex items-center justify-center gap-1">
+              <span>🎯</span>
+              <span className="truncate">Matching discard!</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Right Side: Game Action Buttons */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Show Button */}
         <button
           onClick={show}
           disabled={!canShow}
-          className="btn-secondary px-6 py-2 disabled:opacity-30"
+          className="btn-secondary px-4 py-2 disabled:opacity-30 text-sm"
           title="Declare (S)"
         >
           Show
@@ -136,25 +139,12 @@ const Controls: React.FC = () => {
         <button
           onClick={move}
           disabled={!canMove}
-          className="btn-primary px-8 py-2 disabled:opacity-30"
+          className="btn-primary px-6 py-2 disabled:opacity-30 text-sm"
           title="End Turn (M)"
         >
           Move
         </button>
       </div>
-
-      {/* Turn Actions Status */}
-      {isMyTurn && roomState.turnActions && (
-        <div className="text-right text-sm">
-          <div className="text-gray-400">Turn Progress:</div>
-          <div className={`${roomState.turnActions.hasDiscarded ? 'text-green-400' : 'text-gray-500'}`}>
-            ✓ Discard
-          </div>
-          <div className={`${roomState.turnActions.hasDrawn ? 'text-green-400' : 'text-gray-500'}`}>
-            ✓ Draw
-          </div>
-        </div>
-      )}
     </div>
   );
 };

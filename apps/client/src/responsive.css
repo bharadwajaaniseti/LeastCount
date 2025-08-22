@@ -31,6 +31,14 @@ html, body {
   position: relative;
 }
 
+/* Ensure bottom controls are always visible */
+.game-container > div:last-child {
+  min-height: 80px;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+}
+
 .table-container {
   flex: 1;
   display: flex;
@@ -40,6 +48,8 @@ html, body {
   padding: 0.5rem;
   width: 100%;
   margin: 0 auto;
+  /* Reduce height to make room for bottom controls */
+  max-height: calc(100vh - 240px);
 }
 
 .table-wrapper {
