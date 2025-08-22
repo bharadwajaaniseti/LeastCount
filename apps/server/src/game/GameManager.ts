@@ -446,6 +446,12 @@ export class GameManager {
     const caller = room.players.find(p => p.id === callerId)!;
     const callerHandTotal = this.validator.calculateHandTotal(caller.hand);
     
+    // Capture final hands before any modifications
+    const finalHands: Record<string, Card[]> = {};
+    for (const player of room.players) {
+      finalHands[player.id] = [...player.hand]; // Deep copy the hands
+    }
+    
     // Calculate all hand totals first
     const handTotals: Record<string, number> = {};
     for (const player of room.players) {
@@ -499,6 +505,7 @@ export class GameManager {
       ok: isValid,
       callerId,
       scoresRound: scores,
+      finalHands: finalHands,
       penaltyApplied: isValid ? undefined : room.rules.badDeclarePenalty,
     });
 

@@ -29,6 +29,7 @@ interface GameState {
   roundEndData: { 
     roundScores: Record<string, number>; 
     winnerId: string;
+    finalHands: Record<string, Card[]>;
   } | null;
   scoresData: { players: any[]; roundScores: Record<string, number[]> } | null;
   error: string | null;
@@ -237,13 +238,18 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
     });
 
-    socket.on('show:result', ({ callerId, scoresRound }: { callerId: string; scoresRound: Record<string, number> }) => {
+    socket.on('show:result', ({ callerId, scoresRound, finalHands }: { 
+      callerId: string; 
+      scoresRound: Record<string, number>;
+      finalHands: Record<string, Card[]>;
+    }) => {
       // Show round end modal with results
       set({
         showRoundEndModal: true,
         roundEndData: {
           roundScores: scoresRound,
-          winnerId: callerId // The person who showed/declared
+          winnerId: callerId, // The person who showed/declared
+          finalHands: finalHands
         }
       });
     });
