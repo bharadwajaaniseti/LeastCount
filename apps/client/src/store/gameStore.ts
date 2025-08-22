@@ -73,11 +73,26 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // Actions
   connect: () => {
+    const { socket: existingSocket } = get();
+    
+    // Don't create a new connection if already connected
+    if (existingSocket?.connected) {
+      return;
+    }
+    
+    // Clean up existing socket if any
+    if (existingSocket) {
+      existingSocket.disconnect();
+    }
+
     const serverUrl = import.meta.env.VITE_SERVER_URL || 
       (import.meta.env.MODE === 'production' ? 'https://leastcount.onrender.com' : 'http://localhost:3001');
     const socket = io(serverUrl, {
       transports: ['websocket'],
     });
+
+    // Store socket immediately
+    set({ socket });
 
     socket.on('connect', () => {
       set({ connected: true, playerId: socket.id });
@@ -96,11 +111,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ connected: false });
     });
 
-    socket.on('room:state', (roomState) => {
+    socket.on('room:state', (roomState: any) => {
       set({ roomState, roomCode: roomState.roomCode });
     });
 
-    socket.on('error', ({ message }) => {
+    socket.on('error', ({ message }: { code?: string; message: string }) => {
       set({ error: message });
     });
 
@@ -109,7 +124,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ selectedCardIds: [], selectionInfo: null });
     });
 
-    socket.on('turn:updated', ({ skippedDraw }) => {
+    socket.on('turn:updated', ({ skippedDraw }: { skippedDraw?: boolean }) => {
       // Clear selection after successful action
       set({ selectedCardIds: [], selectionInfo: null });
       
@@ -120,7 +135,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     });
 
-    socket.on('room:ended', ({ reason }) => {
+    socket.on('room:ended', ({ reason }: { reason: string }) => {
       // Handle room ended by host
       set({ 
         error: reason,
@@ -140,7 +155,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }, 3000);
     });
 
-    socket.on('room:rulesUpdated', ({ rules }) => {
+    socket.on('room:rulesUpdated', ({ rules }: { rules: any }) => {
       // Update room rules
       const { roomState } = get();
       if (roomState) {
@@ -153,14 +168,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     });
 
-    socket.on('game:scores', ({ players, roundScores }) => {
+    socket.on('game:scores', ({ players, roundScores }: { players: any[]; roundScores: Record<string, number[]> }) => {
       set({ 
         scoresData: { players, roundScores },
         showScoresModal: true 
       });
     });
 
-    socket.on('show:result', ({ callerId, scoresRound }) => {
+    socket.on('show:result', ({ callerId, scoresRound }: { callerId: string; scoresRound: Record<string, number> }) => {
       // Show round end modal with results
       set({
         showRoundEndModal: true,
@@ -170,13 +185,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       });
     });
-
-    set({ socket });
   },
 
   disconnect: () => {
     const { socket } = get();
     if (socket) {
+      // Remove all listeners to prevent memory leaks
+      socket.removeAllListeners();
       socket.disconnect();
     }
     set({
@@ -187,51 +202,66 @@ export const useGameStore = create<GameState>((set, get) => ({
       playerId: null,
       selectedCardIds: [],
       selectionInfo: null,
+      showRulesModal: false,
+      showScoresModal: false,
+      showRoundEndModal: false,
+      roundEndData: null,
+      scoresData: null,
+      error: null,
     });
+    // Clear localStorage
+    localStorage.removeItem('leastcount_room');
+    localStorage.removeItem('leastcount_player_name');
   },
 
   createRoom: (name: string, eliminationPoints?: number) => {
     const { socket } = get();
-    if (socket) {
+    if (socket?.connected) {
       // Store player name for potential rejoin
       localStorage.setItem('leastcount_player_name', name);
       socket.emit('room:create', { name, eliminationPoints });
+    } else {
+      set({ error: 'Not connected to server. Please refresh and try again.' });
     }
   },
 
   joinRoom: (roomCode: string, name: string) => {
     const { socket } = get();
-    if (socket) {
+    if (socket?.connected) {
       // Store player name for potential rejoin
       localStorage.setItem('leastcount_player_name', name);
       socket.emit('room:join', { roomCode, name });
+    } else {
+      set({ error: 'Not connected to server. Please refresh and try again.' });
     }
   },
 
   startGame: () => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('game:start', { roomCode: roomState.roomCode });
+    } else {
+      set({ error: 'Cannot start game. Connection or room state issue.' });
     }
   },
 
   endRoom: () => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('room:end', { roomCode: roomState.roomCode });
     }
   },
 
   updateRules: (rules: Partial<Rules>) => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('room:updateRules', { roomCode: roomState.roomCode, rules });
     }
   },
 
   exitRoom: () => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('room:exit', { roomCode: roomState.roomCode });
     }
     // Clear all client state and localStorage
@@ -254,7 +284,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   viewScores: () => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('game:viewScores', { roomCode: roomState.roomCode });
     }
   },
@@ -262,13 +292,16 @@ export const useGameStore = create<GameState>((set, get) => ({
   selectCard: (cardId: string) => {
     const { selectedCardIds, roomState } = get();
     const currentPlayer = roomState?.players.find((p: any) => p.id === get().playerId);
-    if (!currentPlayer) return;
+    if (!currentPlayer) {
+      set({ error: 'Cannot select cards: Player not found in room.' });
+      return;
+    }
 
     let newSelectedCardIds: string[];
     
     if (selectedCardIds.includes(cardId)) {
       // Deselect card
-      newSelectedCardIds = selectedCardIds.filter(id => id !== cardId);
+      newSelectedCardIds = selectedCardIds.filter((id: string) => id !== cardId);
     } else {
       // Select card
       newSelectedCardIds = [...selectedCardIds, cardId];
@@ -289,39 +322,58 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   confirmDiscard: () => {
     const { socket, roomState, selectedCardIds } = get();
-    if (socket && roomState && selectedCardIds.length > 0) {
-      socket.emit('turn:discard', {
-        roomCode: roomState.roomCode,
-        cardIds: selectedCardIds,
-      });
+    if (!socket?.connected) {
+      set({ error: 'Not connected to server.' });
+      return;
     }
+    if (!roomState) {
+      set({ error: 'No active room.' });
+      return;
+    }
+    if (selectedCardIds.length === 0) {
+      set({ error: 'No cards selected.' });
+      return;
+    }
+    
+    socket.emit('turn:discard', {
+      roomCode: roomState.roomCode,
+      cardIds: selectedCardIds,
+    });
   },
 
   drawStock: () => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('turn:drawStock', { roomCode: roomState.roomCode });
+    } else {
+      set({ error: 'Cannot draw from stock: Connection or room issue.' });
     }
   },
 
   drawDiscard: (end: 'first' | 'last') => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('turn:drawDiscard', { roomCode: roomState.roomCode, end });
+    } else {
+      set({ error: 'Cannot draw from discard: Connection or room issue.' });
     }
   },
 
   move: () => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('turn:move', { roomCode: roomState.roomCode });
+    } else {
+      set({ error: 'Cannot move: Connection or room issue.' });
     }
   },
 
   show: () => {
     const { socket, roomState } = get();
-    if (socket && roomState) {
+    if (socket?.connected && roomState) {
       socket.emit('turn:show', { roomCode: roomState.roomCode });
+    } else {
+      set({ error: 'Cannot show: Connection or room issue.' });
     }
   },
 
