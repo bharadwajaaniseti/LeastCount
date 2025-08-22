@@ -337,10 +337,10 @@ export class GameManager {
   }
 
   private setRoundJoker(room: RoomState) {
-    // Joker rotation: A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
+    // Random joker selection from all possible ranks
     const jokerSequence: Rank[] = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'];
-    const jokerIndex = (room.round - 1) % jokerSequence.length;
-    room.currentJoker = jokerSequence[jokerIndex];
+    const randomIndex = Math.floor(Math.random() * jokerSequence.length);
+    room.currentJoker = jokerSequence[randomIndex];
   }
 
   private setRoundFirstPlayer(room: RoomState) {
