@@ -115,8 +115,8 @@ const Hand: React.FC = () => {
       )}
 
       {/* Hand Cards */}
-      <div className="flex justify-center">
-        <div className="flex -space-x-4 max-w-full overflow-x-auto px-4">
+      <div className="flex justify-center w-full">
+        <div className="flex -space-x-2 sm:-space-x-4 justify-center items-center flex-wrap px-2">
           {currentPlayer.hand.map((card) => (
             <Card
               key={card.id}
