@@ -145,13 +145,29 @@ export class GameManager {
     player.hand = player.hand.filter(c => !data.cardIds.includes(c.id));
     
     const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
+    
+    // Check if discarded rank matches the previous discard rank (skip draw rule)
+    const canSkipDraw = this.checkMatchingDiscard(room!.topDiscard, discardGroup);
+    
     room!.topDiscard = discardGroup;
-    room!.phase = 'turn-draw';
-    room!.turnActions = { hasDiscarded: true, hasDrawn: false };
+    
+    if (canSkipDraw) {
+      // Skip draw phase - go directly to await-move
+      room!.phase = 'await-move';
+      room!.turnActions = { hasDiscarded: true, hasDrawn: true }; // Mark as drawn (skipped)
+    } else {
+      // Normal flow - go to draw phase
+      room!.phase = 'turn-draw';
+      room!.turnActions = { hasDiscarded: true, hasDrawn: false };
+    }
+    
     room!.canShow = false; // No show after any action
 
     this.io.to(data.roomCode).emit('room:state', room!);
-    this.io.to(data.roomCode).emit('turn:updated', { discardGroup });
+    this.io.to(data.roomCode).emit('turn:updated', { 
+      discardGroup, 
+      skippedDraw: canSkipDraw 
+    });
   }
 
   handleDrawStock(socket: TypedSocket, data: { roomCode: string }) {
@@ -274,6 +290,20 @@ export class GameManager {
     }
 
     return true;
+  }
+
+  private checkMatchingDiscard(previousDiscard: DiscardGroup | undefined, newDiscard: DiscardGroup): boolean {
+    // If there's no previous discard, can't match
+    if (!previousDiscard) return false;
+    
+    // Only single cards can trigger skip draw for now (can be extended for sets/runs)
+    if (newDiscard.type !== 'single' || previousDiscard.type !== 'single') return false;
+    
+    // Check if the ranks match (ignoring suit)
+    const previousRank = previousDiscard.cards[0].rank;
+    const newRank = newDiscard.cards[0].rank;
+    
+    return previousRank === newRank;
   }
 
   private dealCards(room: RoomState) {

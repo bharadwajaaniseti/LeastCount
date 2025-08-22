@@ -84,9 +84,15 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ selectedCardIds: [], selectionInfo: null });
     });
 
-    socket.on('turn:updated', () => {
+    socket.on('turn:updated', ({ skippedDraw }) => {
       // Clear selection after successful action
       set({ selectedCardIds: [], selectionInfo: null });
+      
+      // Show notification if draw was skipped
+      if (skippedDraw) {
+        // You can add a toast notification or temporary message here
+        console.log('🎯 Matching discard! Draw skipped - you can move now.');
+      }
     });
 
     socket.on('room:ended', ({ reason }) => {

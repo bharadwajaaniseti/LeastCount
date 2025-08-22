@@ -76,7 +76,11 @@ export interface ServerToClientEvents {
   'room:rulesUpdated': (data: { rules: Rules }) => void;
   'game:started': () => void;
   'turn:begin': (data: { playerId: string; canShow: boolean }) => void;
-  'turn:updated': (data: { discardGroup?: DiscardGroup; drewFrom?: 'stock' | 'discard-first' | 'discard-last' }) => void;
+  'turn:updated': (data: { 
+    discardGroup?: DiscardGroup; 
+    drewFrom?: 'stock' | 'discard-first' | 'discard-last';
+    skippedDraw?: boolean;
+  }) => void;
   'turn:ended': (data: { nextPlayerId: string }) => void;
   'show:result': (data: { 
     ok: boolean; 

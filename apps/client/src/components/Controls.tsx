@@ -79,6 +79,17 @@ const Controls: React.FC = () => {
         </div>
       )}
 
+      {/* Skip Draw Notification */}
+      {isMyTurn && roomState.phase === 'await-move' && 
+       roomState.turnActions?.hasDiscarded && roomState.turnActions?.hasDrawn && (
+        <div className="text-center text-green-400 text-sm">
+          <div className="flex items-center gap-2">
+            <span>🎯</span>
+            <span>Matching discard! Draw skipped</span>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
         {/* Show Button */}
