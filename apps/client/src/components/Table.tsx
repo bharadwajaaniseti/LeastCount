@@ -4,11 +4,22 @@ import Card from './Card';
 import Seat from './Seat';
 
 const Table: React.FC = () => {
-  const { roomState, drawStock, drawDiscard } = useGameStore();
+  const { roomState, drawStock, drawDiscard, playerId } = useGameStore();
 
-  if (!roomState) return null;
+  if (!roomState || !playerId) return null;
 
   const { stockCount, topDiscard, cardSlotPreview } = roomState;
+
+  // Create dynamic seat arrangement with current player at bottom (seat 0)
+  const currentPlayer = roomState.players.find(p => p.id === playerId);
+  const currentPlayerSeat = currentPlayer?.seat || 0;
+  
+  // Calculate relative seat positions with current player at bottom
+  const getRelativeSeat = (absoluteSeat: number): number => {
+    const totalSeats = 8;
+    const relativeSeat = (absoluteSeat - currentPlayerSeat + totalSeats) % totalSeats;
+    return relativeSeat;
+  };
 
   return (
     <div className="h-full w-full relative flex items-center justify-center p-8">
@@ -104,48 +115,85 @@ const Table: React.FC = () => {
             </div>
           </div>
 
-          {/* Player Seats - Arranged around the table */}
-          {/* Seat positions: 0=bottom, 1=bottom-right, 2=right, 3=top-right, 4=top, 5=top-left, 6=left, 7=bottom-left */}
+          {/* Player Seats - Arranged dynamically around the table with current player at bottom */}
+          {/* Current player always at bottom (seat 0) */}
+          {roomState.players.map((player) => {
+            const relativeSeat = getRelativeSeat(player.seat);
+            let seatClass = '';
+            
+            switch (relativeSeat) {
+              case 0: // Bottom (current player)
+                seatClass = 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
+                break;
+              case 1: // Bottom Right
+                seatClass = 'absolute bottom-12 right-12';
+                break;
+              case 2: // Right
+                seatClass = 'absolute right-4 top-1/2 transform -translate-y-1/2';
+                break;
+              case 3: // Top Right
+                seatClass = 'absolute top-12 right-12';
+                break;
+              case 4: // Top
+                seatClass = 'absolute top-4 left-1/2 transform -translate-x-1/2';
+                break;
+              case 5: // Top Left
+                seatClass = 'absolute top-12 left-12';
+                break;
+              case 6: // Left
+                seatClass = 'absolute left-4 top-1/2 transform -translate-y-1/2';
+                break;
+              case 7: // Bottom Left
+                seatClass = 'absolute bottom-12 left-12';
+                break;
+            }
+
+            return (
+              <div key={player.id} className={seatClass}>
+                <Seat playerId={player.id} />
+              </div>
+            );
+          })}
           
-          {/* Bottom (Seat 0) */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-            <Seat seatNumber={0} />
-          </div>
+          {/* Empty seats */}
+          {Array.from({ length: 8 - roomState.players.length }).map((_, index) => {
+            const emptySeatIndex = roomState.players.length + index;
+            const relativeSeat = getRelativeSeat(emptySeatIndex);
+            let seatClass = '';
+            
+            switch (relativeSeat) {
+              case 0:
+                seatClass = 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
+                break;
+              case 1:
+                seatClass = 'absolute bottom-12 right-12';
+                break;
+              case 2:
+                seatClass = 'absolute right-4 top-1/2 transform -translate-y-1/2';
+                break;
+              case 3:
+                seatClass = 'absolute top-12 right-12';
+                break;
+              case 4:
+                seatClass = 'absolute top-4 left-1/2 transform -translate-x-1/2';
+                break;
+              case 5:
+                seatClass = 'absolute top-12 left-12';
+                break;
+              case 6:
+                seatClass = 'absolute left-4 top-1/2 transform -translate-y-1/2';
+                break;
+              case 7:
+                seatClass = 'absolute bottom-12 left-12';
+                break;
+            }
 
-          {/* Bottom Right (Seat 1) */}
-          <div className="absolute bottom-12 right-12">
-            <Seat seatNumber={1} />
-          </div>
-
-          {/* Right (Seat 2) */}
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-            <Seat seatNumber={2} />
-          </div>
-
-          {/* Top Right (Seat 3) */}
-          <div className="absolute top-12 right-12">
-            <Seat seatNumber={3} />
-          </div>
-
-          {/* Top (Seat 4) */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-            <Seat seatNumber={4} />
-          </div>
-
-          {/* Top Left (Seat 5) */}
-          <div className="absolute top-12 left-12">
-            <Seat seatNumber={5} />
-          </div>
-
-          {/* Left (Seat 6) */}
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-            <Seat seatNumber={6} />
-          </div>
-
-          {/* Bottom Left (Seat 7) */}
-          <div className="absolute bottom-12 left-12">
-            <Seat seatNumber={7} />
-          </div>
+            return (
+              <div key={`empty-${index}`} className={seatClass}>
+                <Seat playerId={null} />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -1,9 +1,0 @@
-[build]
-nixpacksCommand = "npm run build:server"
-
-[deploy]
-startCommand = "npm run start:server"
-restartPolicyType = "on_failure"
-
-[env]
-NODE_ENV = "production"

@@ -3,15 +3,15 @@ import { useGameStore } from '@/store/gameStore';
 import clsx from 'clsx';
 
 interface SeatProps {
-  seatNumber: number;
+  playerId: string | null;
 }
 
-const Seat: React.FC<SeatProps> = ({ seatNumber }) => {
+const Seat: React.FC<SeatProps> = ({ playerId }) => {
   const { roomState } = useGameStore();
 
   if (!roomState) return null;
 
-  const player = roomState.players.find(p => p.seat === seatNumber);
+  const player = playerId ? roomState.players.find(p => p.id === playerId) : null;
   const isActive = player && roomState.activePlayerId === player.id;
 
   if (!player) {

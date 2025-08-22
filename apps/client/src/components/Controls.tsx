@@ -55,6 +55,15 @@ const Controls: React.FC = () => {
   const canMove = isMyTurn && roomState.phase === 'await-move' && 
                   roomState.turnActions?.hasDiscarded && 
                   roomState.turnActions?.hasDrawn;
+  
+  // Debug logging
+  console.log('Controls Debug:', {
+    isMyTurn,
+    phase: roomState.phase,
+    hasDiscarded: roomState.turnActions?.hasDiscarded,
+    hasDrawn: roomState.turnActions?.hasDrawn,
+    canMove
+  });
 
   return (
     <div className="h-full flex items-center justify-between px-6">
