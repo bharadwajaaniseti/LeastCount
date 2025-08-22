@@ -394,7 +394,7 @@ export class GameManager {
 
     // Set up stock
     room.stockCount = this.deck.remainingCards();
-    room.phase = 'turn-discard';
+    room.phase = 'turn-draw';
   }
 
   private setRoundJoker(room: RoomState) {
@@ -463,7 +463,7 @@ export class GameManager {
       room.activePlayerId = activePlayers[0].id;
     }
     
-    room.phase = 'turn-discard';
+    room.phase = 'turn-draw';
     
     // Check if player can show (hand total <= threshold)
     const activePlayer = activePlayers.find(p => p.id === room.activePlayerId);
@@ -496,7 +496,10 @@ export class GameManager {
   private resolveShow(room: RoomState, callerId: string, isValid: boolean) {
     const scores: Record<string, number> = {};
     const caller = room.players.find(p => p.id === callerId)!;
-    const callerHandTotal = this.validator.calculateHandTotal(caller.hand, room.currentJoker);
+    
+    // Save current joker before it gets changed for next round
+    const currentRoundJoker = room.currentJoker;
+    const callerHandTotal = this.validator.calculateHandTotal(caller.hand, currentRoundJoker);
     
     // Capture final hands before any modifications
     const finalHands: Record<string, Card[]> = {};
@@ -504,10 +507,10 @@ export class GameManager {
       finalHands[player.id] = [...player.hand]; // Deep copy the hands
     }
     
-    // Calculate all hand totals first
+    // Calculate all hand totals first using current round's joker
     const handTotals: Record<string, number> = {};
     for (const player of room.players) {
-      handTotals[player.id] = this.validator.calculateHandTotal(player.hand, room.currentJoker);
+      handTotals[player.id] = this.validator.calculateHandTotal(player.hand, currentRoundJoker);
     }
     
     // Find minimum hand total among all players
