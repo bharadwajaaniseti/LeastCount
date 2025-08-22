@@ -93,6 +93,24 @@ html, body {
   z-index: 40 !important;
 }
 
+/* Game buttons and hand area should be highest priority */
+.btn-primary, .btn-secondary, .btn-danger {
+  z-index: 100 !important;
+  position: relative !important;
+}
+
+/* Hand area and confirm buttons should always be on top */
+.h-full.flex.flex-col.justify-end {
+  z-index: 90 !important;
+  position: relative !important;
+}
+
+/* Any button containing "Confirm" or game actions */
+button[class*="btn-"] {
+  z-index: 100 !important;
+  position: relative !important;
+}
+
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .table-container {

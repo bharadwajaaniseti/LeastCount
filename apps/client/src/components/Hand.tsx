@@ -69,10 +69,10 @@ const Hand: React.FC = () => {
   const canDiscard = isMyTurn && roomState.phase === 'turn-discard';
 
   return (
-    <div className="h-full flex flex-col justify-end p-4">
+    <div className="h-full flex flex-col justify-end p-4 relative z-40">
       {/* Hand Count Display */}
-      <div className="mb-2 flex justify-center">
-        <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2">
+      <div className="mb-2 flex justify-center relative z-50">
+        <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2 relative z-50">
           <div className="flex items-center gap-4">
             <div>
               <span className="text-gray-400 text-sm">Hand Count: </span>
@@ -103,10 +103,11 @@ const Hand: React.FC = () => {
 
       {/* Confirm Discard Button */}
       {canDiscard && selectionInfo?.isValid && selectedCardIds.length > 0 && (
-        <div className="mb-4 flex justify-center">
+        <div className="mb-4 flex justify-center relative z-50">
           <button
             onClick={confirmDiscard}
-            className="btn-primary px-8 py-2"
+            className="btn-primary px-8 py-2 relative z-50 shadow-lg"
+            style={{ zIndex: 100 }}
           >
             Confirm Discard
           </button>
