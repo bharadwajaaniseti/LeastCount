@@ -146,8 +146,17 @@ const Table: React.FC = () => {
 
                 {/* Card Slot */}
                 <div className="flex flex-col items-center gap-1 sm:gap-2">
-                  <div className="text-white text-xs sm:text-sm font-medium">Card Slot</div>
-                  <div className="card-slot">
+                  <div className="text-white text-xs sm:text-sm font-medium">
+                    Card Slot
+                    {roomState.phase === 'turn-discard' && roomState.activePlayerId === playerId && (
+                      <div className="text-yellow-400 text-xs mt-1">Drop cards here</div>
+                    )}
+                  </div>
+                  <div className={`card-slot ${
+                    roomState.phase === 'turn-discard' && roomState.activePlayerId === playerId 
+                      ? 'border-yellow-400 border-2 animate-pulse' 
+                      : ''
+                  }`}>
                     {cardSlotPreview && cardSlotPreview.length > 0 ? (
                       <div className="flex -space-x-1 sm:-space-x-2">
                         {cardSlotPreview.map((cardId) => {
@@ -166,10 +175,20 @@ const Table: React.FC = () => {
                       </div>
                     ) : (
                       <div className="text-gray-500 text-xs text-center">
-                        Place cards<br />here
+                        {roomState.phase === 'turn-discard' && roomState.activePlayerId === playerId 
+                          ? 'Drop cards here\nfirst!' 
+                          : 'Temporary\ncard area'
+                        }
                       </div>
                     )}
                   </div>
+                  
+                  {/* Flow indicator */}
+                  {cardSlotPreview && cardSlotPreview.length > 0 && roomState.activePlayerId === playerId && (
+                    <div className="text-xs text-blue-400 text-center mt-1">
+                      Hit MOVE to place in discard →
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

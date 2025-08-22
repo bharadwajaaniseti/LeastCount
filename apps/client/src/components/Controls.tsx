@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
+import Timer from './Timer';
 
 const Controls: React.FC = () => {
   const { 
@@ -55,11 +56,19 @@ const Controls: React.FC = () => {
   const canMove = isMyTurn && roomState.phase === 'await-move' && 
                   roomState.turnActions?.hasDiscarded && 
                   roomState.turnActions?.hasDrawn;
+  
+  // Check if player can draw from discard pile (not their own discarded cards)
+  const canDrawDiscard = isMyTurn && roomState.phase === 'turn-draw' && 
+                         roomState.topDiscard?.cards.length && 
+                         !roomState.turnActions?.discardedFromCardSlot;
 
   return (
     <div className="h-full flex items-center justify-between px-6">
-      {/* Left Side: Game Info & Utility Buttons */}
+      {/* Left Side: Game Info, Timer & Utility Buttons */}
       <div className="flex items-center gap-6">
+        {/* Timer */}
+        <Timer />
+        
         {/* Game Phase Indicator */}
         <div className="flex flex-col">
           <div className="text-gray-400 text-sm">Phase</div>
@@ -104,7 +113,13 @@ const Controls: React.FC = () => {
         <div className="text-center text-gray-300 text-sm">
           <div>Draw a card:</div>
           <div className="text-xs text-gray-400 mt-1">
-            D = Stock • F = First discard • L = Last discard
+            D = Stock
+            {canDrawDiscard && (
+              <span> • F = First discard • L = Last discard</span>
+            )}
+            {!canDrawDiscard && roomState.topDiscard?.cards.length && (
+              <span className="text-red-400"> • Cannot draw your own discard</span>
+            )}
           </div>
         </div>
       )}

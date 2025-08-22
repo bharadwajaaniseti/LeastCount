@@ -199,6 +199,37 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     });
 
+    socket.on('turn:timer', ({ timeLeft, isRunning }: { timeLeft: number; isRunning: boolean }) => {
+      // Update timer in room state
+      const { roomState } = get();
+      if (roomState && roomState.turnTimer) {
+        set({
+          roomState: {
+            ...roomState,
+            turnTimer: {
+              ...roomState.turnTimer,
+              timeLeft,
+              isRunning
+            }
+          }
+        });
+      }
+    });
+
+    socket.on('turn:timeout', ({ playerId }: { playerId: string; nextPlayerId: string }) => {
+      // Handle when a player's turn times out
+      const { roomState } = get();
+      if (roomState) {
+        set({
+          error: `Player ${roomState.players.find(p => p.id === playerId)?.name || 'Unknown'} timed out. Moving to next player.`
+        });
+        // Clear error after 3 seconds
+        setTimeout(() => {
+          set({ error: null });
+        }, 3000);
+      }
+    });
+
     socket.on('game:scores', ({ players, roundScores }: { players: any[]; roundScores: Record<string, number[]> }) => {
       set({ 
         scoresData: { players, roundScores },

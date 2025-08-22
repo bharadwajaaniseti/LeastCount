@@ -54,9 +54,15 @@ export interface RoomState {
   turnActions?: {
     hasDiscarded: boolean;
     hasDrawn: boolean;
+    discardedFromCardSlot?: boolean; // Track if they discarded from card slot (can't pick their own discard)
   };
   currentJoker?: Rank; // Current round's joker rank
   firstPlayerId?: string; // Player who starts each round
+  turnTimer?: {
+    timeLeft: number; // seconds remaining
+    maxTime: number; // total time per turn (60 seconds)
+    isRunning: boolean;
+  };
 }
 
 // Socket event types
@@ -88,6 +94,8 @@ export interface ServerToClientEvents {
     skippedDraw?: boolean;
   }) => void;
   'turn:ended': (data: { nextPlayerId: string }) => void;
+  'turn:timeout': (data: { playerId: string; nextPlayerId: string }) => void;
+  'turn:timer': (data: { timeLeft: number; isRunning: boolean }) => void;
   'show:result': (data: { 
     ok: boolean; 
     callerId: string; 

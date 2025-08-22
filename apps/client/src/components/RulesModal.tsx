@@ -42,10 +42,19 @@ const RulesModal: React.FC = () => {
           {/* Turn Structure */}
           <section>
             <h3 className="text-xl font-semibold text-white mb-3">Turn Structure</h3>
+            <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4 mb-4">
+              <h4 className="font-semibold text-blue-400 mb-2">🔄 New Card Slot Flow</h4>
+              <div className="text-gray-300 space-y-2 text-sm">
+                <div><strong className="text-white">1. Discard:</strong> Drop cards into the <span className="text-yellow-400">Card Slot</span> (temporary area)</div>
+                <div><strong className="text-white">2. Draw:</strong> Pick from stock or discard pile (can't pick your own discarded cards)</div>
+                <div><strong className="text-white">3. Move:</strong> Cards move from Card Slot to Discard pile and end turn</div>
+                <div className="text-blue-400 text-xs mt-2">⏱️ You have 60 seconds per turn - timer will auto-move if time runs out!</div>
+              </div>
+            </div>
             <div className="text-gray-300 space-y-2">
-              <div><strong className="text-white">1. Discard Phase:</strong> Place valid cards in the card slot</div>
-              <div><strong className="text-white">2. Draw Phase:</strong> Pick from stock or discard pile ends</div>
-              <div><strong className="text-white">3. Move:</strong> End your turn</div>
+              <div><strong className="text-white">Discard Phase:</strong> Select and place valid card combinations</div>
+              <div><strong className="text-white">Draw Phase:</strong> Choose from stock pile or discard pile ends</div>
+              <div><strong className="text-white">Move Phase:</strong> Confirm your turn and pass to next player</div>
             </div>
           </section>
 
@@ -110,12 +119,12 @@ const RulesModal: React.FC = () => {
           {/* Card Values */}
           <section>
             <h3 className="text-xl font-semibold text-white mb-3">Card Values</h3>
-            <div className="grid grid-cols-4 md:grid-cols-8 gap-2 text-center text-sm">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-center text-sm">
               <div className="bg-gray-700/50 p-2 rounded">A = 1</div>
               <div className="bg-gray-700/50 p-2 rounded">2-10 = Face</div>
-              <div className="bg-gray-700/50 p-2 rounded">J = 11</div>
-              <div className="bg-gray-700/50 p-2 rounded">Q = 12</div>
-              <div className="bg-gray-700/50 p-2 rounded">K = 13</div>
+              <div className="bg-gray-700/50 p-2 rounded">J = 10</div>
+              <div className="bg-gray-700/50 p-2 rounded">Q = 10</div>
+              <div className="bg-gray-700/50 p-2 rounded">K = 10</div>
               <div className="bg-gray-700/50 p-2 rounded text-purple-400">Joker = 0</div>
             </div>
           </section>
