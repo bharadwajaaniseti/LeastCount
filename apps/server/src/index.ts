@@ -11,8 +11,8 @@ const httpServer = createServer(app);
 
 // Configure CORS
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://least-count.netlify.app'] // Your actual Netlify domain
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://least-count.netlify.app']
     : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
@@ -21,7 +21,7 @@ app.use(cors({
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
-      ? ['https://least-count.netlify.app'] // Your actual Netlify domain
+      ? ['https://least-count.netlify.app']
       : ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true
   }
@@ -101,5 +101,10 @@ const PORT = process.env.PORT || 3001;
 
 httpServer.listen(PORT, () => {
   console.log(`🚀 Least Count server running on port ${PORT}`);
-  console.log(`📱 Client should connect to: http://localhost:${PORT}`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`📱 Client should connect to: https://leastcount.onrender.com`);
+    console.log(`🌐 Netlify frontend: https://least-count.netlify.app`);
+  } else {
+    console.log(`📱 Client should connect to: http://localhost:${PORT}`);
+  }
 });
