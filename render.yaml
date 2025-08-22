@@ -3,16 +3,10 @@ services:
     name: least-count-server
     env: node
     plan: free
-    buildCommand: |
-      cd packages/shared && 
-      npm ci && 
-      npm run build && 
-      cd ../../apps/server && 
-      npm ci && 
-      npm run build
-    startCommand: cd apps/server && npm start
+    buildCommand: npm install && npm run build:server
+    startCommand: npm run start:server
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3001
+        value: 10000

@@ -56,55 +56,73 @@ npm start
 
 ## 🌐 Production Deployment
 
-### 🚀 Deploy Server to Render
+### 🚀 Deploy Server to Render (Option A: Simple)
 
-1. **Create render.yaml in project root:**
-```yaml
-services:
-  - type: web
-    name: least-count-server
-    env: node
-    plan: free
-    buildCommand: cd packages/shared && npm run build && cd ../../apps/server && npm run build
-    startCommand: cd apps/server && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-```
+1. **Simple render.yaml approach:**
+   - The render.yaml is now simplified to work around build command limitations
+   - Uses root-level npm scripts with postinstall hooks
 
-2. **Push to GitHub and connect to Render:**
-   - Create a GitHub repository
-   - Push your code: `git add . && git commit -m "Initial commit" && git push`
-   - Go to [render.com](https://render.com) and connect your GitHub repo
-   - Render will auto-deploy using the render.yaml configuration
+2. **Manual deployment steps:**
+   ```powershell
+   # Make sure all dependencies are installed locally first
+   npm run install:all
+   
+   # Test the build process locally
+   npm run build:server
+   ```
 
-3. **Note your server URL** (e.g., `https://least-count-server.onrender.com`)
+### 🐳 Deploy Server to Render (Option B: Docker)
+
+If the simple approach fails, use Docker deployment:
+
+1. **Create Dockerfile** (already created in root)
+2. **In Render dashboard:**
+   - Choose "Docker" instead of "Node.js"
+   - Set Dockerfile path to `./Dockerfile`
+   - No build command needed
 
 ### 🌐 Deploy Client to Netlify
 
-1. **Update client environment for production:**
-   Create `apps/client/.env.production`:
+Netlify deployment works better with monorepos:
+
+1. **Update client environment:**
    ```
+   # In apps/client/.env.production
    VITE_SERVER_URL=https://your-render-server-url.onrender.com
    ```
 
-2. **Create netlify.toml in project root:**
+2. **Netlify will use the netlify.toml configuration automatically**
+
+### 🔧 Troubleshooting Deployment Issues
+
+#### Issue 1: Render Build Command Too Long
+**Solution**: Use the simplified render.yaml with postinstall hooks
+
+#### Issue 2: Missing TypeScript Types  
+**Solution**: Already fixed with `npm install --save-dev @types/express @types/uuid`
+
+#### Issue 3: Monorepo Dependencies
+**Solutions**:
+1. Use Docker deployment (Option B above)
+2. Or manually flatten dependencies in server package.json
+
+### 🏗️ Alternative: Railway Deployment
+
+If Render continues to have issues, try Railway:
+
+1. **Create railway.toml:**
    ```toml
    [build]
-     base = "apps/client"
-     command = "cd ../../packages/shared && npm run build && cd ../../apps/client && npm run build"
-     publish = "dist"
-
-   [[redirects]]
-     from = "/*"
-     to = "/index.html"
-     status = 200
+   command = "npm run build:server"
+   
+   [deploy]
+   startCommand = "npm run start:server"
    ```
 
-3. **Deploy to Netlify:**
-   - Go to [netlify.com](https://netlify.com) and connect your GitHub repo
-   - Set build settings to use the netlify.toml configuration
-   - Deploy will happen automatically
+2. **Deploy to Railway:**
+   - Go to [railway.app](https://railway.app)
+   - Connect GitHub repo
+   - Deploy with one click
 
 ### 🔄 Update Client for Production Server
 

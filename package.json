@@ -9,12 +9,14 @@
     "build": "npm run build:shared && npm run build:client && npm run build:server",
     "build:shared": "cd packages/shared && npm run build",
     "build:client": "cd apps/client && npm run build",
-    "build:server": "cd apps/server && npm run build",
+    "build:server": "npm run build:shared && cd apps/server && npm run build",
+    "start:server": "cd apps/server && npm start",
     "lint": "npm run lint:client && npm run lint:server",
     "lint:client": "cd apps/client && npm run lint",
     "lint:server": "cd apps/server && npm run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "install:all": "npm install && cd apps/client && npm install && cd ../server && npm install && cd ../../packages/shared && npm install"
+    "install:all": "npm install && cd apps/client && npm install && cd ../server && npm install && cd ../../packages/shared && npm install",
+    "postinstall": "cd packages/shared && npm install && npm run build && cd ../../apps/server && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
