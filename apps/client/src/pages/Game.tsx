@@ -1,0 +1,120 @@
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useGameStore } from '@/store/gameStore';
+import Lobby from '@/components/Lobby';
+import Table from '@/components/Table';
+import Hand from '@/components/Hand';
+import Controls from '@/components/Controls';
+import RulesModal from '@/components/RulesModal';
+
+const Game: React.FC = () => {
+  const { roomCode: urlRoomCode } = useParams();
+  const navigate = useNavigate();
+  
+  const { 
+    roomState, 
+    playerId, 
+    connected, 
+    connect,
+    showRulesModal,
+    setShowRulesModal
+  } = useGameStore();
+
+  useEffect(() => {
+    if (!connected) {
+      connect();
+    }
+  }, [connected, connect]);
+
+  useEffect(() => {
+    if (!roomState && urlRoomCode) {
+      // If we have a room code in URL but no room state, redirect to home
+      // User probably refreshed the page or accessed directly
+      navigate('/');
+    }
+  }, [roomState, urlRoomCode, navigate]);
+
+  if (!roomState || !playerId) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading game...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentPlayer = roomState.players.find(p => p.id === playerId);
+  const isMyTurn = roomState.activePlayerId === playerId;
+
+  return (
+    <div className="h-screen w-screen bg-gray-900 overflow-hidden relative">
+      {roomState.phase === 'lobby' ? (
+        <Lobby />
+      ) : (
+        <>
+          {/* Main Game Area */}
+          <div className="h-full flex flex-col">
+            {/* Table Area */}
+            <div className="flex-1 relative">
+              <Table />
+            </div>
+
+            {/* Hand Area */}
+            <div className="h-48 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-gray-700">
+              <Hand />
+            </div>
+
+            {/* Controls Area */}
+            <div className="h-20 bg-gray-900 border-t border-gray-700">
+              <Controls />
+            </div>
+          </div>
+
+          {/* Game Info Overlay */}
+          <div className="absolute top-4 left-4 z-10">
+            <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-4 space-y-2">
+              <div className="text-white font-semibold">Room: {roomState.roomCode}</div>
+              <div className="text-gray-400 text-sm">Round: {roomState.round}</div>
+              <div className="text-gray-400 text-sm">
+                Players: {roomState.players.filter(p => p.status === 'active').length}
+              </div>
+              {isMyTurn && (
+                <div className="text-yellow-400 text-sm font-medium">Your Turn!</div>
+              )}
+            </div>
+          </div>
+
+          {/* Rules Button */}
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={() => setShowRulesModal(true)}
+              className="bg-gray-800/90 hover:bg-gray-700/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-gray-300 hover:text-white transition-colors"
+              title="View Rules"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Score Display */}
+          {currentPlayer && (
+            <div className="absolute bottom-24 left-4 z-10">
+              <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-3">
+                <div className="text-gray-400 text-sm">Your Score</div>
+                <div className="text-white text-xl font-bold">{currentPlayer.score || 0}</div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Rules Modal */}
+      {showRulesModal && <RulesModal />}
+    </div>
+  );
+};
+
+export default Game;

@@ -1,0 +1,495 @@
+import { Server, Socket } from 'socket.io';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+  RoomState,
+  Player,
+  Card,
+  DiscardGroup,
+  DEFAULT_RULES,
+  GamePhase,
+  ValidationResult,
+} from '@least-count/shared';
+import { Deck } from './Deck';
+import { GameValidator } from './GameValidator';
+
+type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+
+export class GameManager {
+  private rooms = new Map<string, RoomState>();
+  private playerRooms = new Map<string, string>(); // socketId -> roomCode
+  private deck = new Deck();
+  private validator = new GameValidator();
+
+  constructor(private io: Server<ClientToServerEvents, ServerToClientEvents>) {}
+
+  createRoom(socket: TypedSocket, data: { name: string; eliminationPoints?: number }) {
+    const roomCode = this.generateRoomCode();
+    const player: Player = {
+      id: socket.id,
+      name: data.name,
+      seat: 0,
+      status: 'active',
+      hand: [],
+      isHost: true,
+      score: 0,
+    };
+
+    const rules = { ...DEFAULT_RULES };
+    if (data.eliminationPoints && data.eliminationPoints > 0) {
+      rules.eliminationAt = data.eliminationPoints;
+    }
+
+    const room: RoomState = {
+      roomCode,
+      players: [player],
+      hostId: socket.id,
+      stockCount: 0,
+      phase: 'lobby',
+      round: 1,
+      rules,
+    };
+
+    this.rooms.set(roomCode, room);
+    this.playerRooms.set(socket.id, roomCode);
+    
+    socket.join(roomCode);
+    socket.emit('room:state', room);
+  }
+
+  joinRoom(socket: TypedSocket, data: { roomCode: string; name: string }) {
+    const room = this.rooms.get(data.roomCode);
+    
+    if (!room) {
+      socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+      return;
+    }
+
+    if (room.phase !== 'lobby') {
+      socket.emit('error', { code: 'GAME_IN_PROGRESS', message: 'Game already in progress' });
+      return;
+    }
+
+    if (room.players.length >= 8) {
+      socket.emit('error', { code: 'ROOM_FULL', message: 'Room is full' });
+      return;
+    }
+
+    // Find next available seat
+    const occupiedSeats = room.players.map(p => p.seat);
+    let nextSeat = 0;
+    while (occupiedSeats.includes(nextSeat)) {
+      nextSeat++;
+    }
+
+    const player: Player = {
+      id: socket.id,
+      name: data.name,
+      seat: nextSeat,
+      status: 'active',
+      hand: [],
+      isHost: false,
+      score: 0,
+    };
+
+    room.players.push(player);
+    this.playerRooms.set(socket.id, data.roomCode);
+    
+    socket.join(data.roomCode);
+    this.io.to(data.roomCode).emit('room:state', room);
+  }
+
+  startGame(socket: TypedSocket, data: { roomCode: string }) {
+    const room = this.rooms.get(data.roomCode);
+    
+    if (!room) {
+      socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+      return;
+    }
+
+    if (room.hostId !== socket.id) {
+      socket.emit('error', { code: 'NOT_HOST', message: 'Only host can start the game' });
+      return;
+    }
+
+    if (room.players.length < 2) {
+      socket.emit('error', { code: 'NOT_ENOUGH_PLAYERS', message: 'Need at least 2 players' });
+      return;
+    }
+
+    this.dealCards(room);
+    this.io.to(data.roomCode).emit('game:started');
+    this.startTurn(room);
+  }
+
+  handleDiscard(socket: TypedSocket, data: { roomCode: string; cardIds: string[] }) {
+    const room = this.rooms.get(data.roomCode);
+    if (!this.validateTurn(socket, room, 'turn-discard')) return;
+
+    const player = room!.players.find(p => p.id === socket.id)!;
+    const cards = data.cardIds.map(id => player.hand.find(c => c.id === id)).filter(Boolean) as Card[];
+    
+    if (cards.length !== data.cardIds.length) {
+      socket.emit('error', { code: 'INVALID_CARDS', message: 'Some cards not found in hand' });
+      return;
+    }
+
+    const validation = this.validator.validateDiscard(cards);
+    if (!validation.valid) {
+      socket.emit('error', { code: 'INVALID_DISCARD', message: validation.error || 'Invalid discard' });
+      return;
+    }
+
+    // Remove cards from hand and create discard group
+    player.hand = player.hand.filter(c => !data.cardIds.includes(c.id));
+    
+    const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
+    room!.topDiscard = discardGroup;
+    room!.phase = 'turn-draw';
+    room!.turnActions = { hasDiscarded: true, hasDrawn: false };
+    room!.canShow = false; // No show after any action
+
+    this.io.to(data.roomCode).emit('room:state', room!);
+    this.io.to(data.roomCode).emit('turn:updated', { discardGroup });
+  }
+
+  handleDrawStock(socket: TypedSocket, data: { roomCode: string }) {
+    const room = this.rooms.get(data.roomCode);
+    if (!this.validateTurn(socket, room, 'turn-draw')) return;
+
+    if (room!.stockCount <= 0) {
+      socket.emit('error', { code: 'EMPTY_STOCK', message: 'Stock pile is empty' });
+      return;
+    }
+
+    const player = room!.players.find(p => p.id === socket.id)!;
+    const newCard = this.deck.drawCard();
+    
+    if (newCard) {
+      player.hand.push(newCard);
+      room!.stockCount--;
+      room!.phase = 'await-move';
+      room!.turnActions!.hasDrawn = true;
+
+      this.io.to(data.roomCode).emit('room:state', room!);
+      this.io.to(data.roomCode).emit('turn:updated', { drewFrom: 'stock' });
+    }
+  }
+
+  handleDrawDiscard(socket: TypedSocket, data: { roomCode: string; end: 'first' | 'last' }) {
+    const room = this.rooms.get(data.roomCode);
+    if (!this.validateTurn(socket, room, 'turn-draw')) return;
+
+    if (!room!.topDiscard) {
+      socket.emit('error', { code: 'EMPTY_DISCARD', message: 'Discard pile is empty' });
+      return;
+    }
+
+    const discardCards = room!.topDiscard.cards;
+    if (discardCards.length === 0) {
+      socket.emit('error', { code: 'EMPTY_DISCARD', message: 'Discard pile is empty' });
+      return;
+    }
+
+    const player = room!.players.find(p => p.id === socket.id)!;
+    const cardIndex = data.end === 'first' ? 0 : discardCards.length - 1;
+    const drawnCard = discardCards[cardIndex];
+
+    // Remove card from discard pile
+    discardCards.splice(cardIndex, 1);
+    
+    // If discard pile becomes empty, clear it
+    if (discardCards.length === 0) {
+      room!.topDiscard = undefined;
+    }
+
+    player.hand.push(drawnCard);
+    room!.phase = 'await-move';
+    room!.turnActions!.hasDrawn = true;
+
+    this.io.to(data.roomCode).emit('room:state', room!);
+    this.io.to(data.roomCode).emit('turn:updated', { 
+      drewFrom: data.end === 'first' ? 'discard-first' : 'discard-last' 
+    });
+  }
+
+  handleMove(socket: TypedSocket, data: { roomCode: string }) {
+    const room = this.rooms.get(data.roomCode);
+    if (!this.validateTurn(socket, room, 'await-move')) return;
+
+    if (!room!.turnActions?.hasDiscarded || !room!.turnActions?.hasDrawn) {
+      socket.emit('error', { 
+        code: 'INCOMPLETE_TURN', 
+        message: 'Must discard and draw before moving' 
+      });
+      return;
+    }
+
+    this.endTurn(room!);
+  }
+
+  handleShow(socket: TypedSocket, data: { roomCode: string }) {
+    const room = this.rooms.get(data.roomCode);
+    if (!this.validateTurn(socket, room, 'turn-discard')) return;
+
+    if (!room!.canShow) {
+      socket.emit('error', { 
+        code: 'CANNOT_SHOW', 
+        message: 'Can only show at start of turn before any actions' 
+      });
+      return;
+    }
+
+    const player = room!.players.find(p => p.id === socket.id)!;
+    const handTotal = this.validator.calculateHandTotal(player.hand);
+
+    if (handTotal <= room!.rules.declareThreshold) {
+      // Valid show
+      this.resolveShow(room!, socket.id, true);
+    } else {
+      // Invalid show - apply penalty
+      player.score = (player.score || 0) + room!.rules.badDeclarePenalty;
+      this.resolveShow(room!, socket.id, false);
+    }
+  }
+
+  private validateTurn(socket: TypedSocket, room: RoomState | undefined, expectedPhase: GamePhase): boolean {
+    if (!room) {
+      socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+      return false;
+    }
+
+    if (room.activePlayerId !== socket.id) {
+      socket.emit('error', { code: 'NOT_YOUR_TURN', message: 'Not your turn' });
+      return false;
+    }
+
+    if (room.phase !== expectedPhase) {
+      socket.emit('error', { 
+        code: 'WRONG_PHASE', 
+        message: `Cannot perform this action in phase: ${room.phase}` 
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  private dealCards(room: RoomState) {
+    this.deck.reset();
+    this.deck.shuffle();
+
+    // Deal cards to each player
+    for (let i = 0; i < room.rules.handSize; i++) {
+      for (const player of room.players) {
+        const card = this.deck.drawCard();
+        if (card) {
+          player.hand.push(card);
+        }
+      }
+    }
+
+    // Set up stock
+    room.stockCount = this.deck.remainingCards();
+    room.phase = 'turn-discard';
+  }
+
+  private startTurn(room: RoomState) {
+    if (room.players.length === 0) return;
+
+    // Find next active player
+    const activePlayers = room.players.filter(p => p.status === 'active');
+    if (activePlayers.length === 0) return;
+
+    room.activePlayerId = activePlayers[0].id;
+    room.phase = 'turn-discard';
+    
+    // Check if player can show (hand total <= threshold)
+    const activePlayer = activePlayers[0];
+    const handTotal = this.validator.calculateHandTotal(activePlayer.hand);
+    room.canShow = handTotal <= room.rules.declareThreshold;
+    room.turnActions = { hasDiscarded: false, hasDrawn: false };
+
+    this.io.to(room.roomCode).emit('room:state', room);
+    this.io.to(room.roomCode).emit('turn:begin', { 
+      playerId: room.activePlayerId, 
+      canShow: room.canShow 
+    });
+  }
+
+  private endTurn(room: RoomState) {
+    const activePlayers = room.players.filter(p => p.status === 'active');
+    const currentIndex = activePlayers.findIndex(p => p.id === room.activePlayerId);
+    const nextIndex = (currentIndex + 1) % activePlayers.length;
+    const nextPlayer = activePlayers[nextIndex];
+
+    const previousPlayerId = room.activePlayerId;
+    room.activePlayerId = nextPlayer.id;
+    
+    this.io.to(room.roomCode).emit('turn:ended', { nextPlayerId: nextPlayer.id });
+    this.startTurn(room);
+  }
+
+  private resolveShow(room: RoomState, callerId: string, isValid: boolean) {
+    const scores: Record<string, number> = {};
+    
+    for (const player of room.players) {
+      const handTotal = this.validator.calculateHandTotal(player.hand);
+      scores[player.id] = handTotal;
+      player.score = (player.score || 0) + handTotal;
+    }
+
+    if (!isValid) {
+      // Apply penalty to caller
+      const caller = room.players.find(p => p.id === callerId);
+      if (caller) {
+        caller.score = (caller.score || 0) + room.rules.badDeclarePenalty;
+      }
+    }
+
+    // Check for eliminations
+    for (const player of room.players) {
+      if (player.score! >= room.rules.eliminationAt) {
+        player.status = 'dropped';
+      }
+    }
+
+    this.io.to(room.roomCode).emit('show:result', {
+      ok: isValid,
+      callerId,
+      scoresRound: scores,
+      penaltyApplied: isValid ? undefined : room.rules.badDeclarePenalty,
+    });
+
+    // Start new round or end game
+    const activePlayers = room.players.filter(p => p.status === 'active');
+    if (activePlayers.length <= 1) {
+      room.phase = 'game-over';
+    } else {
+      room.round++;
+      this.dealCards(room);
+      this.startTurn(room);
+    }
+
+    this.io.to(room.roomCode).emit('room:state', room);
+  }
+
+  private generateRoomCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    // Ensure uniqueness
+    if (this.rooms.has(result)) {
+      return this.generateRoomCode();
+    }
+    
+    return result;
+  }
+
+  endRoom(socket: TypedSocket, data: { roomCode: string }) {
+    const room = this.rooms.get(data.roomCode);
+    
+    if (!room) {
+      socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+      return;
+    }
+
+    if (room.hostId !== socket.id) {
+      socket.emit('error', { code: 'NOT_HOST', message: 'Only host can end the room' });
+      return;
+    }
+
+    // Notify all players that room is ending
+    this.io.to(data.roomCode).emit('room:ended', { 
+      reason: 'Host ended the room',
+      hostLeft: false 
+    });
+
+    // Clean up room and player mappings
+    for (const player of room.players) {
+      this.playerRooms.delete(player.id);
+    }
+    this.rooms.delete(data.roomCode);
+
+    // Make all sockets leave the room
+    this.io.in(data.roomCode).disconnectSockets();
+  }
+
+  updateRules(socket: TypedSocket, data: { roomCode: string; rules: Partial<any> }) {
+    const room = this.rooms.get(data.roomCode);
+    
+    if (!room) {
+      socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+      return;
+    }
+
+    if (room.hostId !== socket.id) {
+      socket.emit('error', { code: 'NOT_HOST', message: 'Only host can update rules' });
+      return;
+    }
+
+    if (room.phase !== 'lobby') {
+      socket.emit('error', { code: 'GAME_IN_PROGRESS', message: 'Cannot change rules during game' });
+      return;
+    }
+
+    // Update rules (only allow specific fields)
+    const allowedRuleUpdates = ['eliminationAt', 'declareThreshold', 'badDeclarePenalty', 'handSize'];
+    for (const [key, value] of Object.entries(data.rules)) {
+      if (allowedRuleUpdates.includes(key) && typeof value === 'number' && value > 0) {
+        (room.rules as any)[key] = value;
+      }
+    }
+
+    // Notify all players of rule changes
+    this.io.to(data.roomCode).emit('room:rulesUpdated', { rules: room.rules });
+    this.io.to(data.roomCode).emit('room:state', room);
+  }
+
+  handleDisconnect(socket: TypedSocket) {
+    const roomCode = this.playerRooms.get(socket.id);
+    
+    if (!roomCode) return;
+
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    // Remove player from room
+    const playerIndex = room.players.findIndex(p => p.id === socket.id);
+    if (playerIndex === -1) return;
+
+    const disconnectedPlayer = room.players[playerIndex];
+    const wasHost = disconnectedPlayer.isHost;
+
+    // If host disconnects, end the room
+    if (wasHost) {
+      this.io.to(roomCode).emit('room:ended', { 
+        reason: 'Host left the room',
+        hostLeft: true 
+      });
+
+      // Clean up all players
+      for (const player of room.players) {
+        this.playerRooms.delete(player.id);
+      }
+      this.rooms.delete(roomCode);
+      return;
+    }
+
+    // Remove non-host player
+    room.players.splice(playerIndex, 1);
+    this.playerRooms.delete(socket.id);
+
+    // If it was their turn, move to next player
+    if (room.activePlayerId === socket.id) {
+      this.endTurn(room);
+    }
+
+    // Update all remaining players
+    this.io.to(roomCode).emit('room:state', room);
+  }
+}

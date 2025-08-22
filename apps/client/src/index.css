@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply h-full overflow-hidden;
+  }
+  
+  body {
+    @apply bg-gray-900 text-white font-sans;
+  }
+}
+
+@layer components {
+  .card {
+    @apply relative w-16 h-24 rounded-lg border-2 border-gray-300 bg-white text-black 
+           flex items-center justify-center cursor-pointer transform transition-all duration-200
+           shadow-card select-none;
+  }
+  
+  .card:hover {
+    @apply shadow-card-hover scale-105 -translate-y-2;
+  }
+  
+  .card.selected {
+    @apply border-blue-500 bg-blue-50 -translate-y-4;
+  }
+  
+  .card-back {
+    @apply card bg-blue-900 border-blue-700;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+  }
+  
+  .card-slot {
+    @apply w-20 h-28 rounded-xl border-2 border-dashed border-gray-400 
+           flex items-center justify-center bg-gray-800/50;
+  }
+  
+  .seat {
+    @apply relative flex flex-col items-center gap-2 p-4;
+  }
+  
+  .seat-avatar {
+    @apply w-16 h-16 rounded-full border-4 border-gray-600 
+           flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800
+           text-white font-bold text-lg;
+  }
+  
+  .seat-avatar.active {
+    @apply border-yellow-400 ring-4 ring-yellow-400/50;
+    animation: timer-spin 30s linear infinite;
+  }
+  
+  .seat-empty {
+    @apply seat-avatar border-dashed border-gray-500 bg-gray-800/50 text-gray-500;
+  }
+  
+  .table-felt {
+    @apply relative bg-gradient-to-br from-felt-green-400 to-felt-green-600 
+           rounded-full shadow-table;
+  }
+  
+  .table-rim {
+    @apply absolute inset-0 rounded-full shadow-wood-rim;
+    background: linear-gradient(135deg, #8b4513 0%, #654321 50%, #4a2c17 100%);
+    padding: 20px;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold 
+           transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-semibold 
+           transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-green-600 text-white;
+  }
+  
+  .badge-error {
+    @apply badge bg-red-600 text-white;
+  }
+  
+  .badge-info {
+    @apply badge bg-blue-600 text-white;
+  }
+}
