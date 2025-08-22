@@ -171,32 +171,32 @@ export class GameManager {
       return;
     }
 
-    // Remove cards from hand and create discard group
+    // Remove cards from hand and put them in card slot (temporary area)
     player.hand = player.hand.filter(c => !data.cardIds.includes(c.id));
     
-    const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
+    // Put actual cards in card slot preview (temporary area)
+    room!.cardSlotPreview = cards;
     
-    // Check if discarded rank matches the previous discard rank (skip draw rule)
-    const canSkipDraw = this.checkMatchingDiscard(room!.topDiscard, discardGroup);
+    // Don't update topDiscard yet - that happens when player hits MOVE
+    // const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
     
-    room!.topDiscard = discardGroup;
+    // For now, we can't check matching discard since cards aren't in discard pile yet
+    // Player must go through draw phase, then MOVE to place cards in discard pile
     
-    if (canSkipDraw) {
-      // Skip draw phase - go directly to await-move
-      room!.phase = 'await-move';
-      room!.turnActions = { hasDiscarded: true, hasDrawn: true }; // Mark as drawn (skipped)
-    } else {
-      // Normal flow - go to draw phase
-      room!.phase = 'turn-draw';
-      room!.turnActions = { hasDiscarded: true, hasDrawn: false };
-    }
+    // Normal flow - go to draw phase (card slot mechanism)
+    room!.phase = 'turn-draw';
+    room!.turnActions = { 
+      hasDiscarded: true, 
+      hasDrawn: false,
+      discardedFromCardSlot: true // Track that they discarded to card slot
+    };
     
     room!.canShow = false; // No show after any action
 
     this.io.to(data.roomCode).emit('room:state', room!);
     this.io.to(data.roomCode).emit('turn:updated', { 
-      discardGroup, 
-      skippedDraw: canSkipDraw 
+      // Cards are now in card slot, not discard pile yet
+      skippedDraw: false // Card slot mechanism always requires draw phase
     });
   }
 
@@ -226,6 +226,15 @@ export class GameManager {
   handleDrawDiscard(socket: TypedSocket, data: { roomCode: string; end: 'first' | 'last' }) {
     const room = this.rooms.get(data.roomCode);
     if (!this.validateTurn(socket, room, 'turn-draw')) return;
+
+    // Check if player discarded from card slot - they can't draw their own discard
+    if (room!.turnActions?.discardedFromCardSlot) {
+      socket.emit('error', { 
+        code: 'CANNOT_DRAW_OWN_DISCARD', 
+        message: 'Cannot draw from discard pile after discarding to card slot' 
+      });
+      return;
+    }
 
     if (!room!.topDiscard) {
       socket.emit('error', { code: 'EMPTY_DISCARD', message: 'Discard pile is empty' });
@@ -272,6 +281,18 @@ export class GameManager {
       return;
     }
 
+    // Move cards from card slot to discard pile
+    if (room!.cardSlotPreview && room!.cardSlotPreview.length > 0) {
+      // Create discard group from card slot cards
+      const discardGroup: DiscardGroup = this.validator.createDiscardGroup(room!.cardSlotPreview);
+      
+      // Move cards from card slot to discard pile
+      room!.topDiscard = discardGroup;
+      
+      // Clear card slot
+      room!.cardSlotPreview = [];
+    }
+
     this.endTurn(room!);
   }
 
@@ -288,7 +309,7 @@ export class GameManager {
     }
 
     const player = room!.players.find(p => p.id === socket.id)!;
-    const handTotal = this.validator.calculateHandTotal(player.hand);
+    const handTotal = this.validator.calculateHandTotal(player.hand, room!.currentJoker);
 
     if (handTotal <= room!.rules.declareThreshold) {
       // Valid show
@@ -417,7 +438,7 @@ export class GameManager {
     const activePlayer = activePlayers.find(p => p.id === room.activePlayerId);
     if (!activePlayer) return;
     
-    const handTotal = this.validator.calculateHandTotal(activePlayer.hand);
+    const handTotal = this.validator.calculateHandTotal(activePlayer.hand, room.currentJoker);
     room.canShow = handTotal <= room.rules.declareThreshold;
     room.turnActions = { hasDiscarded: false, hasDrawn: false };
 
@@ -444,7 +465,7 @@ export class GameManager {
   private resolveShow(room: RoomState, callerId: string, isValid: boolean) {
     const scores: Record<string, number> = {};
     const caller = room.players.find(p => p.id === callerId)!;
-    const callerHandTotal = this.validator.calculateHandTotal(caller.hand);
+    const callerHandTotal = this.validator.calculateHandTotal(caller.hand, room.currentJoker);
     
     // Capture final hands before any modifications
     const finalHands: Record<string, Card[]> = {};
@@ -455,7 +476,7 @@ export class GameManager {
     // Calculate all hand totals first
     const handTotals: Record<string, number> = {};
     for (const player of room.players) {
-      handTotals[player.id] = this.validator.calculateHandTotal(player.hand);
+      handTotals[player.id] = this.validator.calculateHandTotal(player.hand, room.currentJoker);
     }
     
     // Find minimum hand total among all players

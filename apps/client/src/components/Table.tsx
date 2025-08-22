@@ -159,19 +159,14 @@ const Table: React.FC = () => {
                   }`}>
                     {cardSlotPreview && cardSlotPreview.length > 0 ? (
                       <div className="flex -space-x-1 sm:-space-x-2">
-                        {cardSlotPreview.map((cardId) => {
-                          // Find the card in the current player's hand
-                          const currentPlayer = roomState.players.find(p => p.id === roomState.activePlayerId);
-                          const card = currentPlayer?.hand.find(c => c.id === cardId);
-                          return card ? (
-                            <Card
-                              key={cardId}
-                              card={card}
-                              size="md"
-                              className="transform scale-75"
-                            />
-                          ) : null;
-                        })}
+                        {cardSlotPreview.map((card, index) => (
+                          <Card
+                            key={card.id || index}
+                            card={card}
+                            size="md"
+                            className="transform scale-75"
+                          />
+                        ))}
                       </div>
                     ) : (
                       <div className="text-gray-500 text-xs text-center">

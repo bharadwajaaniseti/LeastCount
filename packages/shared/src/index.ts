@@ -45,7 +45,7 @@ export interface RoomState {
   hostId: string;
   stockCount: number;
   topDiscard?: DiscardGroup;
-  cardSlotPreview?: string[]; // card IDs in the temporary card slot
+  cardSlotPreview?: Card[]; // actual cards in the temporary card slot
   activePlayerId?: string;
   phase: GamePhase;
   round: number;

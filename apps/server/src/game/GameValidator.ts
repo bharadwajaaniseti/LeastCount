@@ -84,8 +84,14 @@ export class GameValidator {
     };
   }
 
-  calculateHandTotal(hand: Card[]): number {
-    return hand.reduce((total, card) => total + CARD_VALUES[card.rank], 0);
+  calculateHandTotal(hand: Card[], currentJoker?: Rank): number {
+    return hand.reduce((total, card) => {
+      // If this card's rank is the current joker, it's worth 0 points
+      if (currentJoker && card.rank === currentJoker) {
+        return total + 0;
+      }
+      return total + CARD_VALUES[card.rank];
+    }, 0);
   }
 
   private isValidSet(cards: Card[]): boolean {
