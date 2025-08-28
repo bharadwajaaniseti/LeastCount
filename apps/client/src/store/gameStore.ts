@@ -245,6 +245,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       finalHands: Record<string, Card[]>;
       roundJoker?: Card;
     }) => {
+      console.log('🃏 [CLIENT] Received show:result with roundJoker:', roundJoker);
       // Show round end modal with results
       set({
         showRoundEndModal: true,

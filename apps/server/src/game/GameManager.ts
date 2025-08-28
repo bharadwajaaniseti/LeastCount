@@ -514,6 +514,7 @@ export class GameManager {
     
     // Save current joker before it gets changed for next round
     const currentRoundJoker = room.currentJoker;
+    console.log(`🃏 [SHOW] Room ${room.roomCode}: Round joker for scoring = ${currentRoundJoker}`);
     const callerHandTotal = this.validator.calculateHandTotal(caller.hand, currentRoundJoker);
     
     // Capture final hands before any modifications
@@ -579,21 +580,30 @@ export class GameManager {
       penaltyApplied: isValid ? undefined : room.rules.badDeclarePenalty,
       roundJoker: currentRoundJoker ? { id: `joker-${currentRoundJoker}`, rank: currentRoundJoker, suit: 'S' as const } : undefined
     });
+    
+    console.log(`🃏 [EMIT] Sending show:result to room ${room.roomCode}:`);
+    console.log(`   - roundJoker: ${currentRoundJoker ? `${currentRoundJoker} (as Card object)` : 'undefined'}`);
+    console.log(`   - room.currentJoker: ${room.currentJoker} (current room state)`);
+    console.log(`   - Players in room: ${room.players.map(p => p.name).join(', ')}`);
 
-    // Start new round or end game
-    const activePlayers = room.players.filter(p => p.status === 'active');
-    if (activePlayers.length <= 1) {
-      room.phase = 'game-over';
-    } else {
-      room.round++;
-      this.setRoundFirstPlayer(room); // Rotate starting player
-      this.dealCards(room);
-      this.setRoundJoker(room); // Set new joker for round
-      this.initializeDiscardPile(room); // Initialize discard pile with non-joker card
-      this.startTurn(room);
-    }
+    // Use a small delay to ensure show:result is processed before room state changes
+    setTimeout(() => {
+      // Start new round or end game
+      const activePlayers = room.players.filter(p => p.status === 'active');
+      if (activePlayers.length <= 1) {
+        room.phase = 'game-over';
+      } else {
+        room.round++;
+        this.setRoundFirstPlayer(room); // Rotate starting player
+        this.dealCards(room);
+        this.setRoundJoker(room); // Set new joker for round
+        this.initializeDiscardPile(room); // Initialize discard pile with non-joker card
+        this.startTurn(room);
+      }
 
-    this.io.to(room.roomCode).emit('room:state', room);
+      console.log(`🃏 [NEXT-ROUND] New joker set: ${room.currentJoker}`);
+      this.io.to(room.roomCode).emit('room:state', room);
+    }, 100); // 100ms delay to ensure show:result is processed first
   }
 
   private generateRoomCode(): string {

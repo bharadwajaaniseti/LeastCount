@@ -40,6 +40,13 @@ const RoundEndModal: React.FC<RoundEndModalProps> = ({
 }) => {
   const [timeLeft, setTimeLeft] = useState(10);
 
+  // Debug logging
+  React.useEffect(() => {
+    if (isOpen && roundJoker) {
+      console.log('🃏 [MODAL] Using roundJoker for calculations:', roundJoker);
+    }
+  }, [isOpen, roundJoker]);
+
   useEffect(() => {
     if (!isOpen) {
       setTimeLeft(10);
