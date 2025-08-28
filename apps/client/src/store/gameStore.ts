@@ -26,11 +26,16 @@ interface GameState {
   showRulesModal: boolean;
   showScoresModal: boolean;
   showRoundEndModal: boolean;
+  showGameEndModal: boolean;
   roundEndData: { 
     roundScores: Record<string, number>; 
     winnerId: string;
     finalHands: Record<string, Card[]>;
     roundJoker?: Card;
+  } | null;
+  gameEndData: {
+    finalScores: Array<{ id: string; name: string; finalScore: number; status: string }>;
+    winner: any | null;
   } | null;
   scoresData: { players: any[]; roundScores: Record<string, number[]> } | null;
   error: string | null;
@@ -47,6 +52,7 @@ interface GameState {
   viewScores: () => void;
   setShowScoresModal: (show: boolean) => void;
   setShowRoundEndModal: (show: boolean) => void;
+  setShowGameEndModal: (show: boolean) => void;
   selectCard: (cardId: string) => void;
   confirmDiscard: () => void;
   drawStock: () => void;
@@ -69,7 +75,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   showRulesModal: false,
   showScoresModal: false,
   showRoundEndModal: false,
+  showGameEndModal: false,
   roundEndData: null,
+  gameEndData: null,
   scoresData: null,
   error: null,
 
@@ -256,6 +264,34 @@ export const useGameStore = create<GameState>((set, get) => ({
           roundJoker: roundJoker // Store the correct joker for this round
         }
       });
+    });
+
+    socket.on('game:ended', ({ finalScores, winner }) => {
+      // Show final game results
+      set({
+        showGameEndModal: true,
+        gameEndData: {
+          finalScores,
+          winner
+        }
+      });
+    });
+
+    socket.on('game:returnToLobby', () => {
+      // Return to main menu after game ends
+      set({
+        roomState: null,
+        roomCode: null,
+        playerId: null,
+        showGameEndModal: false,
+        showRoundEndModal: false,
+        showScoresModal: false,
+        gameEndData: null,
+        roundEndData: null,
+        scoresData: null
+      });
+      // Navigate to home page - this will be handled by the component
+      window.location.href = '/';
     });
   },
 
@@ -459,6 +495,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setShowRoundEndModal: (show: boolean) => {
     set({ showRoundEndModal: show });
+  },
+
+  setShowGameEndModal: (show: boolean) => {
+    set({ showGameEndModal: show });
   },
 
   clearError: () => {

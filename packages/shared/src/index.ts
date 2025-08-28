@@ -87,6 +87,11 @@ export interface ServerToClientEvents {
   'room:rulesUpdated': (data: { rules: Rules }) => void;
   'game:started': () => void;
   'game:scores': (data: { players: Player[]; roundScores: Record<string, number[]> }) => void;
+  'game:ended': (data: { 
+    finalScores: Array<{ id: string; name: string; finalScore: number; status: PlayerStatus }>; 
+    winner: Player | null;
+  }) => void;
+  'game:returnToLobby': () => void;
   'turn:begin': (data: { playerId: string; canShow: boolean }) => void;
   'turn:updated': (data: { 
     discardGroup?: DiscardGroup; 

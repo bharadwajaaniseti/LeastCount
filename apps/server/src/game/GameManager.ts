@@ -588,18 +588,41 @@ export class GameManager {
 
     // Use a small delay to ensure show:result is processed before room state changes
     setTimeout(() => {
-      // Start new round or end game
+      // Check if game should end due to eliminations or insufficient players
       const activePlayers = room.players.filter(p => p.status === 'active');
+      
+      // Game ends if only 1 or fewer active players remain
       if (activePlayers.length <= 1) {
         room.phase = 'game-over';
-      } else {
-        room.round++;
-        this.setRoundFirstPlayer(room); // Rotate starting player
-        this.dealCards(room);
-        this.setRoundJoker(room); // Set new joker for round
-        this.initializeDiscardPile(room); // Initialize discard pile with non-joker card
-        this.startTurn(room);
+        
+        // Emit final game results
+        this.io.to(room.roomCode).emit('game:ended', {
+          finalScores: room.players.map(p => ({
+            id: p.id,
+            name: p.name,
+            finalScore: p.score || 0,
+            status: p.status
+          })),
+          winner: activePlayers.length === 1 ? activePlayers[0] : null
+        });
+        
+        // After showing final results, redirect players back to lobby after 5 seconds
+        setTimeout(() => {
+          this.io.to(room.roomCode).emit('game:returnToLobby');
+          // Clean up the room
+          this.rooms.delete(room.roomCode);
+        }, 5000);
+        
+        return;
       }
+      
+      // Continue to next round
+      room.round++;
+      this.setRoundFirstPlayer(room); // Rotate starting player
+      this.dealCards(room);
+      this.setRoundJoker(room); // Set new joker for round
+      this.initializeDiscardPile(room); // Initialize discard pile with non-joker card
+      this.startTurn(room);
 
       console.log(`🃏 [NEXT-ROUND] New joker set: ${room.currentJoker}`);
       this.io.to(room.roomCode).emit('room:state', room);

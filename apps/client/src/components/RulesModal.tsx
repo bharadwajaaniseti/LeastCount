@@ -6,7 +6,7 @@ const RulesModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-gray-800 border border-gray-700 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto text-white">{/* Added text-white */}
         {/* Header */}
         <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-white">Least Count Rules</h2>
@@ -19,7 +19,7 @@ const RulesModal: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 text-white">{/* Added explicit text-white */}
           {/* Game Overview */}
           <section>
             <h3 className="text-xl font-semibold text-white mb-3">Game Overview</h3>
