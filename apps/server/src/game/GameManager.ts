@@ -692,14 +692,21 @@ export class GameManager {
           player.score = (player.score || 0) + handTotals[player.id];
         }
       } else {
-        // Caller doesn't have lowest: caller gets 40 penalty, others get 0
+        // Caller doesn't have lowest: only the lowest scorer gets 0, others get their hand value
         if (player.id === callerId) {
+          // Caller gets penalty for wrong show
           scores[player.id] = 40;
           player.roundScores.push(40);
           player.score = (player.score || 0) + 40;
-        } else {
+        } else if (handTotals[player.id] === minHandTotal) {
+          // Player with lowest hand gets 0 points
           scores[player.id] = 0;
           player.roundScores.push(0);
+        } else {
+          // All other players get their hand value as points
+          scores[player.id] = handTotals[player.id];
+          player.roundScores.push(handTotals[player.id]);
+          player.score = (player.score || 0) + handTotals[player.id];
         }
       }
     }
