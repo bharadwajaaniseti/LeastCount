@@ -122,6 +122,7 @@ const Hand: React.FC = () => {
               key={card.id}
               card={card}
               selected={selectedCardIds.includes(card.id)}
+              isJokerRank={roomState.currentJoker === card.rank && card.rank !== 'JOKER'}
               onClick={() => {
                 if (canDiscard) {
                   selectCard(card.id);

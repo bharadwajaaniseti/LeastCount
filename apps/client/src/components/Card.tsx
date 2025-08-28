@@ -9,6 +9,7 @@ interface CardProps {
   onClick?: () => void;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  isJokerRank?: boolean; // Highlight if this card matches the current joker rank
 }
 
 const Card: React.FC<CardProps> = ({
@@ -17,7 +18,8 @@ const Card: React.FC<CardProps> = ({
   selected = false,
   onClick,
   className,
-  size = 'md'
+  size = 'md',
+  isJokerRank = false
 }) => {
   const sizeClasses = {
     sm: 'w-12 h-18 text-xs',
@@ -58,7 +60,8 @@ const Card: React.FC<CardProps> = ({
           'cursor-pointer': onClick,
           'text-red-600': isRed && card.rank !== 'JOKER',
           'text-black': !isRed && card.rank !== 'JOKER',
-          'text-purple-600': card.rank === 'JOKER'
+          'text-purple-600': card.rank === 'JOKER',
+          'ring-2 ring-yellow-400 ring-opacity-75 shadow-lg shadow-yellow-400/50 bg-yellow-50/10': isJokerRank && card.rank !== 'JOKER'
         },
         className
       )}

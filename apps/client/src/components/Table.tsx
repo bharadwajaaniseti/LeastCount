@@ -69,26 +69,26 @@ const Table: React.FC = () => {
         <div className="game-table table-rim" style={{ margin: '0 auto', left: '50%', transform: 'translateX(-50%)', position: 'relative', zIndex: 1 }}>
           {/* Table Felt */}
           <div className="table-felt w-full h-full relative flex items-center justify-center" style={{ zIndex: 1 }}>
-            {/* Joker Display */}
-            {roomState.currentJoker && (
-              <div className="absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-4 lg:right-4 flex flex-col items-center gap-1 bg-yellow-600 bg-opacity-20 p-1 sm:p-2 lg:p-3 rounded border border-yellow-400 z-20">
-                <div className="text-yellow-300 text-xs font-bold">JOKER</div>
-                <Card 
-                  card={{ 
-                    id: 'joker-display', 
-                    rank: roomState.currentJoker, 
-                    suit: 'S' 
-                  }} 
-                  size="sm" 
-                  className="transform scale-75 sm:scale-100" 
-                />
-                <div className="text-yellow-300 text-xs">Round {roomState.round}</div>
-              </div>
-            )}
-
-            {/* Center Area - Stock, Discard, Card Slot */}
+            {/* Center Area - Joker, Stock, Discard, Card Slot */}
             <div className="absolute inset-0 flex items-center justify-center z-30">
               <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 lg:gap-6 bg-black/20 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl backdrop-blur-sm">
+                {/* Joker Display - Left of Stock */}
+                {roomState.currentJoker && (
+                  <div className="flex flex-col items-center gap-1 bg-yellow-600 bg-opacity-20 p-1 sm:p-2 lg:p-3 rounded border border-yellow-400">
+                    <div className="text-yellow-300 text-xs font-bold">JOKER</div>
+                    <Card 
+                      card={{ 
+                        id: 'joker-display', 
+                        rank: roomState.currentJoker, 
+                        suit: 'S' 
+                      }} 
+                      size="lg" 
+                      className="transform scale-90 sm:scale-100" 
+                    />
+                    <div className="text-yellow-300 text-xs">Round {roomState.round}</div>
+                  </div>
+                )}
+
                 {/* Stock Pile */}
                 <div className="flex flex-col items-center gap-1">
                   <div className="text-white text-xs sm:text-sm font-medium">Stock</div>

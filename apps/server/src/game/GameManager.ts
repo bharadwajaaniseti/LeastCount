@@ -22,6 +22,7 @@ export class GameManager {
   private playerRooms = new Map<string, string>(); // socketId -> roomCode
   private deck = new Deck();
   private validator = new GameValidator();
+  private turnTimers = new Map<string, NodeJS.Timeout>(); // Track active timers per room
 
   constructor(private io: Server<ClientToServerEvents, ServerToClientEvents>) {}
 
@@ -71,9 +72,15 @@ export class GameManager {
     const existingPlayer = room.players.find(p => p.name === data.name);
     
     if (existingPlayer) {
-      // Player is reconnecting - update their socket ID
+      // Player is reconnecting - update their socket ID and reactivate if disconnected
       const oldSocketId = existingPlayer.id;
       existingPlayer.id = socket.id;
+      
+      // Reactivate player if they were disconnected
+      if (existingPlayer.status === 'disconnected') {
+        existingPlayer.status = 'active';
+        console.log(`🔄 [RECONNECT] Room ${data.roomCode}: Player ${existingPlayer.name} reconnected and reactivated`);
+      }
       
       // Update mappings
       this.playerRooms.delete(oldSocketId);
@@ -517,6 +524,9 @@ export class GameManager {
     room.canShow = handTotal <= room.rules.declareThreshold;
     room.turnActions = { hasDiscarded: false, hasDrawn: false };
 
+    // Initialize timer for this turn
+    this.startTurnTimer(room);
+
     console.log(`🔄 [START-TURN] Room ${room.roomCode}: Phase = ${room.phase}, canShow = ${room.canShow}`);
 
     this.io.to(room.roomCode).emit('room:state', room);
@@ -527,6 +537,9 @@ export class GameManager {
   }
 
   private endTurn(room: RoomState) {
+    // Clear any existing timer for this room
+    this.clearTurnTimer(room.roomCode);
+
     const activePlayers = room.players.filter(p => p.status === 'active');
     const currentIndex = activePlayers.findIndex(p => p.id === room.activePlayerId);
     const nextIndex = (currentIndex + 1) % activePlayers.length;
@@ -541,6 +554,81 @@ export class GameManager {
     
     this.io.to(room.roomCode).emit('turn:ended', { nextPlayerId: nextPlayer.id });
     this.startTurn(room);
+  }
+
+  // Timer management methods
+  private startTurnTimer(room: RoomState) {
+    const TURN_TIME_SECONDS = 60;
+    
+    // Clear any existing timer
+    this.clearTurnTimer(room.roomCode);
+    
+    // Initialize timer in room state
+    room.turnTimer = {
+      timeLeft: TURN_TIME_SECONDS,
+      maxTime: TURN_TIME_SECONDS,
+      isRunning: true
+    };
+
+    // Send initial timer state
+    this.io.to(room.roomCode).emit('turn:timer', {
+      timeLeft: room.turnTimer.timeLeft,
+      isRunning: room.turnTimer.isRunning
+    });
+
+    // Start countdown
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      if (!room.turnTimer || !room.turnTimer.isRunning) {
+        clearInterval(interval);
+        return;
+      }
+
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      room.turnTimer.timeLeft = Math.max(0, TURN_TIME_SECONDS - elapsed);
+
+      // Broadcast timer update
+      this.io.to(room.roomCode).emit('turn:timer', {
+        timeLeft: room.turnTimer.timeLeft,
+        isRunning: room.turnTimer.isRunning
+      });
+
+      // Check if time is up
+      if (room.turnTimer.timeLeft <= 0) {
+        clearInterval(interval);
+        this.handleTurnTimeout(room);
+      }
+    }, 1000); // Update every second
+
+    // Store the interval reference
+    this.turnTimers.set(room.roomCode, interval);
+  }
+
+  private clearTurnTimer(roomCode: string) {
+    const timer = this.turnTimers.get(roomCode);
+    if (timer) {
+      clearInterval(timer);
+      this.turnTimers.delete(roomCode);
+    }
+
+    // Also clear timer state in room
+    const room = this.rooms.get(roomCode);
+    if (room?.turnTimer) {
+      room.turnTimer.isRunning = false;
+    }
+  }
+
+  private handleTurnTimeout(room: RoomState) {
+    console.log(`⏰ [TIMEOUT] Room ${room.roomCode}: Player ${room.players.find(p => p.id === room.activePlayerId)?.name} timed out`);
+    
+    // Emit timeout event
+    this.io.to(room.roomCode).emit('turn:timeout', {
+      playerId: room.activePlayerId!,
+      nextPlayerId: room.activePlayerId! // Will be updated in endTurn
+    });
+
+    // Force end turn
+    this.endTurn(room);
   }
 
   private resolveShow(room: RoomState, callerId: string, isValid: boolean) {
@@ -808,9 +896,11 @@ export class GameManager {
 
     const disconnectedPlayer = room.players[playerIndex];
     const wasHost = disconnectedPlayer.isHost;
+    const wasActivePlayer = room.activePlayerId === socket.id;
 
     // If host disconnects, end the room
     if (wasHost) {
+      this.clearTurnTimer(roomCode); // Clear timer when room ends
       this.io.to(roomCode).emit('room:ended', { 
         reason: 'Host left the room',
         hostLeft: true 
@@ -824,13 +914,20 @@ export class GameManager {
       return;
     }
 
-    // Remove non-host player
-    room.players.splice(playerIndex, 1);
-    this.playerRooms.delete(socket.id);
-
-    // If it was their turn, move to next player
-    if (room.activePlayerId === socket.id) {
-      this.endTurn(room);
+    // Mark player as disconnected instead of removing them during active game
+    if (room.phase !== 'lobby') {
+      disconnectedPlayer.status = 'disconnected';
+      console.log(`🔌 [DISCONNECT] Room ${roomCode}: Player ${disconnectedPlayer.name} marked as disconnected during game`);
+      
+      // If it was their turn, move to next player automatically
+      if (wasActivePlayer) {
+        this.clearTurnTimer(roomCode); // Clear current timer
+        this.endTurn(room);
+      }
+    } else {
+      // Remove player completely if in lobby
+      room.players.splice(playerIndex, 1);
+      this.playerRooms.delete(socket.id);
     }
 
     // Update all remaining players

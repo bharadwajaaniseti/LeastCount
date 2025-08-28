@@ -7,7 +7,7 @@ export interface Card {
   suit?: Suit; // undefined for JOKER
 }
 
-export type PlayerStatus = 'active' | 'dropped' | 'shown';
+export type PlayerStatus = 'active' | 'dropped' | 'shown' | 'disconnected';
 
 export interface Player {
   id: string;
