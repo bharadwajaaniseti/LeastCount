@@ -540,6 +540,17 @@ export class GameManager {
     // Clear any existing timer for this room
     this.clearTurnTimer(room.roomCode);
 
+    // CRITICAL FIX: Restore any cards from staging area back to player's hand
+    // This prevents cards from disappearing if turn ends unexpectedly
+    if (room.cardSlotPreview && room.cardSlotPreview.length > 0) {
+      const currentPlayer = room.players.find(p => p.id === room.activePlayerId);
+      if (currentPlayer) {
+        console.log(`🔄 [END-TURN] Room ${room.roomCode}: Restoring ${room.cardSlotPreview.length} cards from staging area back to ${currentPlayer.name}'s hand`);
+        currentPlayer.hand.push(...room.cardSlotPreview);
+        room.cardSlotPreview = [];
+      }
+    }
+
     const activePlayers = room.players.filter(p => p.status === 'active');
     const currentIndex = activePlayers.findIndex(p => p.id === room.activePlayerId);
     const nextIndex = (currentIndex + 1) % activePlayers.length;
