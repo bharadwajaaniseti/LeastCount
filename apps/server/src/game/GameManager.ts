@@ -360,17 +360,20 @@ export class GameManager {
     // If there's no previous discard, can't match
     if (!previousDiscard) return false;
     
-    // Only single cards can trigger skip draw for now (can be extended for sets/runs)
-    if (newDiscard.type !== 'single' || previousDiscard.type !== 'single') return false;
+    // Currently only single cards can skip draw (player dropping one card)
+    if (newDiscard.type !== 'single') return false;
     
-    const previousCard = previousDiscard.cards[0];
+    // Get the card being discarded by current player
     const newCard = newDiscard.cards[0];
     
-    // Check if the ranks match (ignoring suit) OR exact same card (rank + suit)
-    const rankMatch = previousCard.rank === newCard.rank;
-    const exactMatch = previousCard.rank === newCard.rank && previousCard.suit === newCard.suit;
+    // Check if any card in the previous discard matches the new card's rank
+    for (const previousCard of previousDiscard.cards) {
+      if (previousCard.rank === newCard.rank) {
+        return true; // Found a matching rank
+      }
+    }
     
-    return rankMatch || exactMatch;
+    return false; // No matching rank found
   }
 
   private dealCards(room: RoomState) {
