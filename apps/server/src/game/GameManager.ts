@@ -203,8 +203,8 @@ export class GameManager {
         skippedDraw: true // Indicate they skipped draw due to matching discard
       });
     } else {
-      // Normal flow - go to await-move phase so player can hit MOVE to place cards in discard
-      room!.phase = 'await-move';
+      // Normal flow - go to draw phase (cards stay in card slot until MOVE)
+      room!.phase = 'turn-draw';
       
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { 
@@ -296,18 +296,19 @@ export class GameManager {
       // Clear card slot
       room!.cardSlotPreview = [];
       
-      // Mark that player discarded from card slot to prevent drawing their own discard
+      // Mark that player discarded from card slot (prevents drawing own discard in future)
       room!.turnActions!.discardedFromCardSlot = true;
     }
 
-    // Check if player has already drawn (due to matching discard skip)
+    // In the new flow, MOVE should only be pressed after drawing, so end turn
     if (room!.turnActions?.hasDrawn) {
-      // Player skipped draw due to matching discard, end turn
       this.endTurn(room!);
     } else {
-      // Normal flow - go to draw phase
-      room!.phase = 'turn-draw';
-      this.io.to(room!.roomCode).emit('room:state', room!);
+      socket.emit('error', { 
+        code: 'INCOMPLETE_TURN', 
+        message: 'Must draw a card before ending turn' 
+      });
+      return;
     }
   }
 
