@@ -203,7 +203,7 @@ export class GameManager {
         skippedDraw: true // Indicate they skipped draw due to matching discard
       });
     } else {
-      // Normal flow - go to await-move phase (player needs to hit MOVE to place cards in discard)
+      // Normal flow - go to await-move phase so player can hit MOVE to place cards in discard
       room!.phase = 'await-move';
       
       this.io.to(data.roomCode).emit('room:state', room!);
@@ -295,6 +295,9 @@ export class GameManager {
       
       // Clear card slot
       room!.cardSlotPreview = [];
+      
+      // Mark that player discarded from card slot to prevent drawing their own discard
+      room!.turnActions!.discardedFromCardSlot = true;
     }
 
     // Check if player has already drawn (due to matching discard skip)

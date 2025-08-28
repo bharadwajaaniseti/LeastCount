@@ -53,9 +53,11 @@ const Controls: React.FC = () => {
 
   const isMyTurn = roomState.activePlayerId === playerId;
   const canShow = isMyTurn && roomState.phase === 'turn-discard' && roomState.canShow;
+  
+  // MOVE button logic: Allow if in await-move phase and has discarded
+  // Don't require hasDrawn for first MOVE (card slot to discard transfer)
   const canMove = isMyTurn && roomState.phase === 'await-move' && 
-                  roomState.turnActions?.hasDiscarded && 
-                  roomState.turnActions?.hasDrawn;
+                  roomState.turnActions?.hasDiscarded;
   
   // Check if player can draw from discard pile (not their own discarded cards)
   const canDrawDiscard = isMyTurn && roomState.phase === 'turn-draw' && 
