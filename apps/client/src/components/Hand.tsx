@@ -116,7 +116,7 @@ const Hand: React.FC = () => {
 
       {/* Hand Cards */}
       <div className="flex justify-center w-full">
-        <div className="flex -space-x-2 sm:-space-x-4 justify-center items-center flex-wrap px-2">
+        <div className="flex -space-x-1 sm:-space-x-2 md:-space-x-4 justify-center items-center flex-wrap px-1 sm:px-2">
           {currentPlayer.hand.map((card) => (
             <Card
               key={card.id}
@@ -131,6 +131,7 @@ const Hand: React.FC = () => {
                 transition-all duration-200 
                 ${canDiscard ? 'hover:cursor-pointer' : 'cursor-default opacity-75'}
                 ${selectedCardIds.includes(card.id) ? 'transform -translate-y-4' : ''}
+                touch-manipulation
               `}
             />
           ))}
@@ -138,10 +139,11 @@ const Hand: React.FC = () => {
       </div>
 
       {/* Hand Info */}
-      <div className="mt-2 text-center text-gray-400 text-sm">
+      <div className="mt-1 sm:mt-2 text-center text-gray-400 text-xs sm:text-sm">
         {isMyTurn && roomState.phase === 'turn-discard' && (
           <span className="text-yellow-400">
-            Double-click cards to select/deselect
+            <span className="hidden sm:inline">Double-click</span>
+            <span className="sm:hidden">Tap</span> cards to select/deselect
           </span>
         )}
       </div>

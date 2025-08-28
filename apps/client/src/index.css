@@ -16,9 +16,22 @@
 
 @layer components {
   .card {
-    @apply relative w-12 h-16 sm:w-16 sm:h-24 rounded-lg border-2 border-gray-300 bg-white text-black 
+    @apply relative rounded-lg border-2 border-gray-300 bg-white text-black 
            flex items-center justify-center cursor-pointer transform transition-all duration-200
            shadow-card select-none;
+    /* Default desktop sizes - will be overridden by responsive.css for mobile/tablet */
+    width: 3rem; /* 48px */
+    height: 4rem; /* 64px */
+    font-size: 0.875rem;
+  }
+  
+  /* Responsive sizing using Tailwind breakpoints */
+  @media (min-width: 640px) {
+    .card {
+      width: 4rem; /* 64px */
+      height: 6rem; /* 96px */
+      font-size: 1rem;
+    }
   }
   
   .card:hover {
@@ -35,8 +48,19 @@
   }
   
   .card-slot {
-    @apply w-16 h-20 sm:w-20 sm:h-28 rounded-xl border-2 border-dashed border-gray-400 
+    @apply rounded-xl border-2 border-dashed border-gray-400 
            flex items-center justify-center bg-gray-800/50;
+    /* Default mobile/tablet sizes - will be overridden by responsive.css */
+    width: 4rem; /* 64px */
+    height: 5rem; /* 80px */
+  }
+  
+  /* Responsive card slot sizing */
+  @media (min-width: 640px) {
+    .card-slot {
+      width: 5rem; /* 80px */
+      height: 7rem; /* 112px */
+    }
   }
   
   .seat {
@@ -44,9 +68,22 @@
   }
   
   .seat-avatar {
-    @apply w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-gray-600 
+    @apply rounded-full border-4 border-gray-600 
            flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800
-           text-white font-bold text-sm sm:text-lg;
+           text-white font-bold;
+    /* Default mobile sizes */
+    width: 3rem; /* 48px */
+    height: 3rem; /* 48px */
+    font-size: 0.875rem;
+  }
+  
+  /* Responsive avatar sizing */
+  @media (min-width: 640px) {
+    .seat-avatar {
+      width: 4rem; /* 64px */
+      height: 4rem; /* 64px */
+      font-size: 1.125rem;
+    }
   }
   
   .seat-avatar.active {
