@@ -560,6 +560,12 @@ export class GameManager {
   private startTurnTimer(room: RoomState) {
     const TURN_TIME_SECONDS = 60;
     
+    // Only start timer during active game phases, not during lobby
+    if (room.phase === 'lobby' || room.phase === 'dealing' || room.phase === 'game-over') {
+      console.log(`⏰ [TIMER] Room ${room.roomCode}: Skipping timer for phase: ${room.phase}`);
+      return;
+    }
+    
     // Clear any existing timer
     this.clearTurnTimer(room.roomCode);
     
@@ -569,6 +575,8 @@ export class GameManager {
       maxTime: TURN_TIME_SECONDS,
       isRunning: true
     };
+
+    console.log(`⏰ [TIMER] Room ${room.roomCode}: Starting 60s timer for ${room.players.find(p => p.id === room.activePlayerId)?.name}`);
 
     // Send initial timer state
     this.io.to(room.roomCode).emit('turn:timer', {
@@ -581,6 +589,14 @@ export class GameManager {
     const interval = setInterval(() => {
       if (!room.turnTimer || !room.turnTimer.isRunning) {
         clearInterval(interval);
+        return;
+      }
+
+      // Double-check that we're still in an active game phase
+      if (room.phase === 'lobby' || room.phase === 'dealing' || room.phase === 'game-over') {
+        console.log(`⏰ [TIMER] Room ${room.roomCode}: Stopping timer due to phase change: ${room.phase}`);
+        clearInterval(interval);
+        this.clearTurnTimer(room.roomCode);
         return;
       }
 
@@ -734,8 +750,10 @@ export class GameManager {
         // After showing final results, redirect players back to lobby after 5 seconds
         setTimeout(() => {
           this.io.to(room.roomCode).emit('game:returnToLobby');
-          // Clean up the room
+          // Clean up timers and the room
+          this.clearTurnTimer(room.roomCode);
           this.rooms.delete(room.roomCode);
+          console.log(`🏁 [CLEANUP] Room ${room.roomCode}: Game completed, room deleted`);
         }, 5000);
         
         return;
@@ -782,6 +800,9 @@ export class GameManager {
       return;
     }
 
+    // Clear any active timers for this room
+    this.clearTurnTimer(data.roomCode);
+
     // Notify all players that room is ending
     this.io.to(data.roomCode).emit('room:ended', { 
       reason: 'Host ended the room',
@@ -796,6 +817,8 @@ export class GameManager {
 
     // Make all sockets leave the room
     this.io.in(data.roomCode).disconnectSockets();
+
+    console.log(`🏠 [END] Room ${data.roomCode}: Ended by host`);
   }
 
   updateRules(socket: TypedSocket, data: { roomCode: string; rules: Partial<any> }) {
@@ -850,9 +873,12 @@ export class GameManager {
       if (room.players.length > 0) {
         room.players[0].isHost = true;
         room.hostId = room.players[0].id;
+        console.log(`🔄 [HOST-TRANSFER] Room ${data.roomCode}: Host transferred to ${room.players[0].name}`);
       } else {
-        // No players left, delete room
+        // No players left, clean up timers and delete room
+        this.clearTurnTimer(data.roomCode);
         this.rooms.delete(data.roomCode);
+        console.log(`🏠 [DELETE] Room ${data.roomCode}: Last player left, room deleted`);
         return;
       }
     }
