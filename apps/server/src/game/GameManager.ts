@@ -360,10 +360,10 @@ export class GameManager {
     // If there's no previous discard, can't match
     if (!previousDiscard) return false;
     
-    // Currently only single cards can skip draw (player dropping one card)
-    if (newDiscard.type !== 'single') return false;
+    // Allow both single cards and sets to match
+    if (newDiscard.type !== 'single' && newDiscard.type !== 'set') return false;
     
-    // Get the card being discarded by current player
+    // Get the first card being discarded by current player (for sets, all cards have same rank)
     const newCard = newDiscard.cards[0];
     
     // Check if any card in the previous discard matches the new card's rank
