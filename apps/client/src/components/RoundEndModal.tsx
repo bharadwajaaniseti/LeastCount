@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Player, Rank, Card } from '@least-count/shared';
+import { Player, Card } from '@least-count/shared';
 
 // Card values matching the updated shared package (J, Q, K = 10)
 const CARD_VALUES: Record<string, number> = {
@@ -25,7 +25,7 @@ interface RoundEndModalProps {
   players: Player[];
   winnerId: string;
   finalHands: Record<string, Card[]>;
-  currentJoker?: Rank;
+  roundJoker?: Card; // The joker that was used for this round
   onNextRound: () => void;
 }
 
@@ -35,7 +35,7 @@ const RoundEndModal: React.FC<RoundEndModalProps> = ({
   players,
   winnerId,
   finalHands,
-  currentJoker,
+  roundJoker,
   onNextRound
 }) => {
   const [timeLeft, setTimeLeft] = useState(10);
@@ -61,7 +61,7 @@ const RoundEndModal: React.FC<RoundEndModalProps> = ({
 
   const calculateHandTotal = (hand: Player['hand']) => {
     return hand.reduce((total, card) => {
-      if (card.rank === currentJoker) {
+      if (roundJoker && card.rank === roundJoker.rank) {
         return total; // Jokers are worth 0
       }
       return total + (CARD_VALUES[card.rank.toString()] || 0);
@@ -162,7 +162,7 @@ const RoundEndModal: React.FC<RoundEndModalProps> = ({
                   <div className="mt-3 flex justify-center">
                     <div className="flex gap-1 max-w-full overflow-x-auto">
                       {finalHand.slice(0, 7).map((card, cardIndex) => {
-                        const isJoker = card.rank === currentJoker;
+                        const isJoker = roundJoker && card.rank === roundJoker.rank;
                         const value = isJoker ? 0 : (CARD_VALUES[card.rank.toString()] || 0);
                         
                         return (

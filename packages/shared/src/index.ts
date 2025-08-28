@@ -102,6 +102,7 @@ export interface ServerToClientEvents {
     scoresRound: Record<string, number>;
     finalHands: Record<string, Card[]>; // Final hands at end of round
     penaltyApplied?: number;
+    roundJoker?: Card; // The joker that was used for this round's scoring
   }) => void;
   'error': (data: { code: string; message: string }) => void;
 }

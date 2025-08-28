@@ -166,7 +166,7 @@ const Game: React.FC = () => {
           players={roomState.players}
           winnerId={roundEndData.winnerId}
           finalHands={roundEndData.finalHands}
-          currentJoker={roomState.currentJoker}
+          roundJoker={roundEndData.roundJoker}
           onNextRound={() => setShowRoundEndModal(false)}
         />
       )}

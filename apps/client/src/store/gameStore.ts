@@ -30,6 +30,7 @@ interface GameState {
     roundScores: Record<string, number>; 
     winnerId: string;
     finalHands: Record<string, Card[]>;
+    roundJoker?: Card;
   } | null;
   scoresData: { players: any[]; roundScores: Record<string, number[]> } | null;
   error: string | null;
@@ -238,10 +239,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
     });
 
-    socket.on('show:result', ({ callerId, scoresRound, finalHands }: { 
+    socket.on('show:result', ({ callerId, scoresRound, finalHands, roundJoker }: { 
       callerId: string; 
       scoresRound: Record<string, number>;
       finalHands: Record<string, Card[]>;
+      roundJoker?: Card;
     }) => {
       // Show round end modal with results
       set({
@@ -249,7 +251,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         roundEndData: {
           roundScores: scoresRound,
           winnerId: callerId, // The person who showed/declared
-          finalHands: finalHands
+          finalHands: finalHands,
+          roundJoker: roundJoker // Store the correct joker for this round
         }
       });
     });

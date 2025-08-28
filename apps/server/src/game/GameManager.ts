@@ -577,6 +577,7 @@ export class GameManager {
       scoresRound: scores,
       finalHands: finalHands,
       penaltyApplied: isValid ? undefined : room.rules.badDeclarePenalty,
+      roundJoker: currentRoundJoker ? { id: `joker-${currentRoundJoker}`, rank: currentRoundJoker, suit: 'S' as const } : undefined
     });
 
     // Start new round or end game
