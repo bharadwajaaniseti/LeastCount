@@ -8,12 +8,17 @@ html, body {
   padding: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   overflow-x: hidden;
+  /* Support for mobile safe areas */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 #root {
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   display: flex;
   justify-content: center;
   align-items: stretch;
@@ -24,11 +29,15 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   max-height: 100vh;
+  max-height: 100dvh; /* Dynamic viewport height for mobile */
   overflow: hidden;
   width: 100vw;
   margin: 0 auto;
   position: relative;
+  /* Safe area support for mobile notches/bottom bars */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .table-container {
@@ -113,8 +122,19 @@ button[class*="btn-"] {
 
 /* Mobile optimizations - phones (portrait and landscape) */
 @media (max-width: 767px) {
+  /* Ensure game container uses full available space */
+  .game-container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+
   .table-container {
     padding: 0.25rem;
+    /* Reduce flex growth to make room for controls */
+    flex: 0.6;
+    min-height: 0;
   }
   
   .game-table {
@@ -135,12 +155,22 @@ button[class*="btn-"] {
   
   /* Compact hand area for mobile */
   .h-40.sm\\:h-48 {
-    height: 8rem !important; /* 128px - smaller than default */
+    height: 7rem !important; /* 112px - reduced to ensure controls fit */
+    flex-shrink: 0;
+    flex-grow: 0;
   }
   
-  /* Smaller controls area */
+  /* Fixed height controls area - always visible */
   .h-16.sm\\:h-20 {
-    height: 3.5rem !important; /* 56px */
+    height: 4rem !important; /* 64px - increased for better touch targets */
+    flex-shrink: 0;
+    flex-grow: 0;
+    min-height: 4rem !important;
+    position: sticky;
+    bottom: 0;
+    background: #111827 !important; /* Ensure solid background */
+    border-top: 2px solid #374151 !important; /* More visible border */
+    z-index: 100 !important;
   }
   
   /* Compact seat avatars */
@@ -161,8 +191,28 @@ button[class*="btn-"] {
   
   /* Smaller buttons on mobile */
   .btn-primary, .btn-secondary, .btn-danger {
-    padding: 0.5rem 1rem !important;
+    padding: 0.75rem 1rem !important;
     font-size: 0.875rem !important;
+    min-height: 3rem !important; /* Ensure proper touch target size */
+    min-width: 4rem !important; /* Ensure buttons are wide enough for touch */
+  }
+  
+  /* Ensure Show/Move buttons are always accessible */
+  .btn-primary {
+    background-color: #3B82F6 !important;
+    border: 2px solid #1D4ED8 !important;
+    font-weight: bold !important;
+  }
+  
+  .btn-secondary {
+    background-color: #6B7280 !important;
+    border: 2px solid #4B5563 !important;
+  }
+  
+  /* Controls container improvements for mobile */
+  .h-full.flex.items-center.justify-between {
+    padding: 0.5rem 1rem !important;
+    gap: 0.5rem !important;
   }
   
   /* Smaller text in controls */
@@ -264,11 +314,17 @@ button[class*="btn-"] {
 @media (max-width: 767px) and (orientation: landscape) {
   /* Even more compact for landscape mobile */
   .h-40.sm\\:h-48 {
-    height: 6rem !important; /* 96px */
+    height: 5rem !important; /* 80px - reduced further for landscape */
   }
   
   .h-16.sm\\:h-20 {
-    height: 3rem !important; /* 48px */
+    height: 3.5rem !important; /* 56px - still visible but more compact */
+    min-height: 3.5rem !important;
+    position: sticky;
+    bottom: 0;
+    background: #111827 !important;
+    border-top: 2px solid #374151 !important;
+    z-index: 100 !important;
   }
   
   .card {
@@ -292,5 +348,11 @@ button[class*="btn-"] {
   .btn-primary, .btn-secondary, .btn-danger {
     padding: 0.375rem 0.75rem !important;
     font-size: 0.75rem !important;
+    min-height: 2.5rem !important; /* Ensure touch target size */
+  }
+  
+  /* Ensure table takes less space in landscape */
+  .table-container {
+    flex: 0.5;
   }
 }

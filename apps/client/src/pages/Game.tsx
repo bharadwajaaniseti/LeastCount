@@ -105,19 +105,19 @@ const Game: React.FC = () => {
       ) : (
         <>
           {/* Main Game Area */}
-          <div className="flex-1 flex flex-col min-h-0">
-            {/* Table Area */}
-            <div className="flex-1 relative min-h-0 flex items-center justify-center">
+          <div className="flex-1 flex flex-col min-h-0 h-full">
+            {/* Table Area - More flexible on mobile */}
+            <div className="flex-1 relative min-h-0 flex items-center justify-center overflow-hidden">
               <Table />
             </div>
 
-            {/* Hand Area */}
-            <div className="h-40 sm:h-48 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-gray-700 flex-shrink-0 relative z-50">
+            {/* Hand Area - Fixed height with scroll if needed */}
+            <div className="h-40 sm:h-48 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-gray-700 flex-shrink-0 relative z-50 overflow-y-auto">
               <Hand />
             </div>
 
-            {/* Controls Area */}
-            <div className="h-16 sm:h-20 bg-gray-900 border-t border-gray-700 flex-shrink-0 relative z-50">
+            {/* Controls Area - Always visible and accessible */}
+            <div className="h-16 sm:h-20 bg-gray-900 border-t border-gray-700 flex-shrink-0 relative z-50 sticky bottom-0">
               <Controls />
             </div>
           </div>
