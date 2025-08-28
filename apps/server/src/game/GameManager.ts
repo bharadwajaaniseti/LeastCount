@@ -190,10 +190,14 @@ export class GameManager {
     const discardGroup: DiscardGroup = this.validator.createDiscardGroup(cards);
     const canSkipDraw = this.checkMatchingDiscard(room!.topDiscard, discardGroup);
     
+    console.log(`🎯 [DISCARD] Room ${data.roomCode}: Player ${room!.players.find(p => p.id === socket.id)?.name} discarded, canSkipDraw = ${canSkipDraw}`);
+    
     if (canSkipDraw) {
       // Player discarded matching card - skip draw but keep cards in card slot until MOVE
       room!.turnActions.hasDrawn = true; // Mark as "drawn" to allow MOVE
       room!.phase = 'await-move';
+      
+      console.log(`🎯 [DISCARD] Room ${data.roomCode}: Skipping draw, phase = ${room!.phase}`);
       
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { 
@@ -202,6 +206,8 @@ export class GameManager {
     } else {
       // Normal flow - go to draw phase (cards stay in card slot until MOVE)
       room!.phase = 'turn-draw';
+      
+      console.log(`🎯 [DISCARD] Room ${data.roomCode}: Normal flow, phase = ${room!.phase}`);
       
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { 
@@ -222,11 +228,15 @@ export class GameManager {
     const player = room!.players.find(p => p.id === socket.id)!;
     const newCard = this.deck.drawCard();
     
+    console.log(`🎴 [DRAW-STOCK] Room ${data.roomCode}: Player ${player.name} drawing from stock`);
+    
     if (newCard) {
       player.hand.push(newCard);
       room!.stockCount--;
       room!.phase = 'await-move';
       room!.turnActions!.hasDrawn = true;
+
+      console.log(`🎴 [DRAW-STOCK] Room ${data.roomCode}: Drew card, phase = ${room!.phase}`);
 
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { drewFrom: 'stock' });
@@ -252,6 +262,8 @@ export class GameManager {
     const cardIndex = data.end === 'first' ? 0 : discardCards.length - 1;
     const drawnCard = discardCards[cardIndex];
 
+    console.log(`🎴 [DRAW-DISCARD] Room ${data.roomCode}: Player ${player.name} drawing from discard (${data.end})`);
+
     // Remove card from discard pile
     discardCards.splice(cardIndex, 1);
     
@@ -264,6 +276,8 @@ export class GameManager {
     room!.phase = 'await-move';
     room!.turnActions!.hasDrawn = true;
 
+    console.log(`🎴 [DRAW-DISCARD] Room ${data.roomCode}: Drew card, phase = ${room!.phase}`);
+
     this.io.to(data.roomCode).emit('room:state', room!);
     this.io.to(data.roomCode).emit('turn:updated', { 
       drewFrom: data.end === 'first' ? 'discard-first' : 'discard-last' 
@@ -272,9 +286,13 @@ export class GameManager {
 
   handleMove(socket: TypedSocket, data: { roomCode: string }) {
     const room = this.rooms.get(data.roomCode);
+    console.log(`🚀 [MOVE] Room ${data.roomCode}: Player ${room?.players.find(p => p.id === socket.id)?.name} attempting move`);
+    console.log(`🚀 [MOVE] Room ${data.roomCode}: Phase = ${room?.phase}, Active player = ${room?.players.find(p => p.id === room.activePlayerId)?.name}`);
+    
     if (!this.validateTurn(socket, room, 'await-move')) return;
 
     if (!room!.turnActions?.hasDiscarded) {
+      console.log(`❌ [MOVE] Room ${data.roomCode}: Player has not discarded yet`);
       socket.emit('error', { 
         code: 'INCOMPLETE_TURN', 
         message: 'Must discard before moving' 
@@ -299,8 +317,10 @@ export class GameManager {
 
     // In the new flow, MOVE should only be pressed after drawing, so end turn
     if (room!.turnActions?.hasDrawn) {
+      console.log(`✅ [MOVE] Room ${data.roomCode}: Move successful, ending turn`);
       this.endTurn(room!);
     } else {
+      console.log(`❌ [MOVE] Room ${data.roomCode}: Player has not drawn yet`);
       socket.emit('error', { 
         code: 'INCOMPLETE_TURN', 
         message: 'Must draw a card before ending turn' 
@@ -467,10 +487,14 @@ export class GameManager {
   }
 
   private startTurn(room: RoomState) {
+    console.log(`🔄 [START-TURN] Room ${room.roomCode}: Starting turn for ${room.players.length} total players`);
+    
     if (room.players.length === 0) return;
 
     // Find next active player
     const activePlayers = room.players.filter(p => p.status === 'active');
+    console.log(`🔄 [START-TURN] Room ${room.roomCode}: Active players: ${activePlayers.map(p => `${p.name}(${p.id})`).join(', ')}`);
+    
     if (activePlayers.length === 0) return;
 
     // Only set activePlayerId if it's not already set (first turn of the game)
@@ -478,15 +502,22 @@ export class GameManager {
       room.activePlayerId = activePlayers[0].id;
     }
     
+    console.log(`🔄 [START-TURN] Room ${room.roomCode}: Active player = ${room.players.find(p => p.id === room.activePlayerId)?.name} (${room.activePlayerId})`);
+    
     room.phase = 'turn-discard';
     
     // Check if player can show (hand total <= threshold)
     const activePlayer = activePlayers.find(p => p.id === room.activePlayerId);
-    if (!activePlayer) return;
+    if (!activePlayer) {
+      console.log(`❌ [START-TURN] Room ${room.roomCode}: Active player not found!`);
+      return;
+    }
     
     const handTotal = this.validator.calculateHandTotal(activePlayer.hand, room.currentJoker);
     room.canShow = handTotal <= room.rules.declareThreshold;
     room.turnActions = { hasDiscarded: false, hasDrawn: false };
+
+    console.log(`🔄 [START-TURN] Room ${room.roomCode}: Phase = ${room.phase}, canShow = ${room.canShow}`);
 
     this.io.to(room.roomCode).emit('room:state', room);
     this.io.to(room.roomCode).emit('turn:begin', { 
@@ -500,6 +531,10 @@ export class GameManager {
     const currentIndex = activePlayers.findIndex(p => p.id === room.activePlayerId);
     const nextIndex = (currentIndex + 1) % activePlayers.length;
     const nextPlayer = activePlayers[nextIndex];
+
+    console.log(`🔄 [END-TURN] Room ${room.roomCode}: Ending turn for ${room.players.find(p => p.id === room.activePlayerId)?.name}`);
+    console.log(`🔄 [END-TURN] Room ${room.roomCode}: Current index = ${currentIndex}, Next index = ${nextIndex}`);
+    console.log(`🔄 [END-TURN] Room ${room.roomCode}: Next player = ${nextPlayer.name} (${nextPlayer.id})`);
 
     const previousPlayerId = room.activePlayerId;
     room.activePlayerId = nextPlayer.id;
