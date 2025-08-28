@@ -176,14 +176,17 @@ const Game: React.FC = () => {
       )}
 
       {/* Game End Modal */}
-      {showGameEndModal && gameEndData && (
-        <GameEndModal
-          isOpen={showGameEndModal}
-          finalScores={gameEndData.finalScores}
-          winner={gameEndData.winner}
-          onReturnToLobby={() => setShowGameEndModal(false)}
-        />
-      )}
+      {(() => {
+        console.log('🔍 [GAME] Rendering check - showGameEndModal:', showGameEndModal, 'gameEndData:', gameEndData);
+        return showGameEndModal && gameEndData && (
+          <GameEndModal
+            isOpen={showGameEndModal}
+            finalScores={gameEndData.finalScores}
+            winner={gameEndData.winner}
+            onReturnToLobby={() => setShowGameEndModal(false)}
+          />
+        );
+      })()}
     </div>
   );
 };

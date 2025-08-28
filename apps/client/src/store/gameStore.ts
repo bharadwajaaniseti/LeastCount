@@ -267,6 +267,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     socket.on('game:ended', ({ finalScores, winner }) => {
+      console.log('🏁 [CLIENT] Received game:ended event:', { finalScores, winner });
       // Show final game results
       set({
         showGameEndModal: true,

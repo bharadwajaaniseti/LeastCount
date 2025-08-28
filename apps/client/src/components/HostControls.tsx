@@ -110,7 +110,7 @@ export const HostControls: React.FC = () => {
                     ...prev, 
                     eliminationAt: parseInt(e.target.value) || room.rules.eliminationAt 
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
                 />
                 <p className="text-gray-300 text-xs mt-1">
                   Players are eliminated when they reach this score
@@ -130,7 +130,7 @@ export const HostControls: React.FC = () => {
                     ...prev, 
                     declareThreshold: parseInt(e.target.value) || room.rules.declareThreshold 
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
                 />
                 <p className="text-gray-300 text-xs mt-1">
                   Maximum hand value to declare/show
@@ -151,7 +151,7 @@ export const HostControls: React.FC = () => {
                     ...prev, 
                     badDeclarePenalty: parseInt(e.target.value) || room.rules.badDeclarePenalty 
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
                 />
                 <p className="text-gray-300 text-xs mt-1">
                   Penalty for invalid declare/show
@@ -171,7 +171,7 @@ export const HostControls: React.FC = () => {
                     ...prev, 
                     handSize: parseInt(e.target.value) || room.rules.handSize 
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
                 />
                 <p className="text-gray-300 text-xs mt-1">
                   Number of cards dealt to each player

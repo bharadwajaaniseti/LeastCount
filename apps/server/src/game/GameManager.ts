@@ -596,6 +596,8 @@ export class GameManager {
         room.phase = 'game-over';
         
         // Emit final game results
+        console.log(`🏁 [GAME-END] Sending game:ended to all players in room ${room.roomCode}`);
+        console.log(`   - Players: ${room.players.map(p => p.name).join(', ')}`);
         this.io.to(room.roomCode).emit('game:ended', {
           finalScores: room.players.map(p => ({
             id: p.id,
