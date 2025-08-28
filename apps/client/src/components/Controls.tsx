@@ -60,9 +60,9 @@ const Controls: React.FC = () => {
                          roomState.topDiscard?.cards.length;
 
   return (
-    <div className="h-full flex items-center justify-between px-2 sm:px-4 lg:px-6">
-      {/* Left Side: Game Info, Timer & Utility Buttons */}
-      <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+    <div className="h-full flex px-2 sm:px-4 lg:px-6">
+      {/* Left Side: Game Info, Timer & Utility Buttons - Fixed width */}
+      <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 min-w-0 flex-shrink-0">
         {/* Timer */}
         <Timer />
         
@@ -117,43 +117,46 @@ const Controls: React.FC = () => {
         </div>
       </div>
 
-      {/* Draw Instructions - Hidden on small mobile */}
-      {isMyTurn && roomState.phase === 'turn-draw' && (
-        <div className="hidden md:block text-center text-gray-300 text-xs sm:text-sm">
-          <div>Draw a card:</div>
-          <div className="text-xs text-gray-400 mt-1">
-            D = Stock
-            {canDrawDiscard && (
-              <span> • F = Discard pile</span>
-            )}
-            {!canDrawDiscard && roomState.topDiscard?.cards.length && (
-              <span className="text-red-400"> • Cannot draw your own discard</span>
-            )}
+      {/* Center: Status Messages - Flexible width */}
+      <div className="flex-1 flex items-center justify-center min-w-0">
+        {/* Draw Instructions - Hidden on small mobile */}
+        {isMyTurn && roomState.phase === 'turn-draw' && (
+          <div className="hidden md:block text-center text-gray-300 text-xs sm:text-sm">
+            <div>Draw a card:</div>
+            <div className="text-xs text-gray-400 mt-1">
+              D = Stock
+              {canDrawDiscard && (
+                <span> • F = Discard pile</span>
+              )}
+              {!canDrawDiscard && roomState.topDiscard?.cards.length && (
+                <span className="text-red-400"> • Cannot draw your own discard</span>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Compact draw instructions for mobile */}
-      {isMyTurn && roomState.phase === 'turn-draw' && (
-        <div className="md:hidden text-center text-gray-300 text-xs">
-          <div>D=Stock{canDrawDiscard && ' • F=Discard'}</div>
-        </div>
-      )}
-
-      {/* Skip Draw Notification */}
-      {isMyTurn && roomState.phase === 'await-move' && 
-       roomState.turnActions?.hasDiscarded && roomState.turnActions?.hasDrawn && (
-        <div className="text-center text-green-400 text-xs sm:text-sm">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <span>🎯</span>
-            <span className="hidden sm:inline">Matching discard! Draw skipped</span>
-            <span className="sm:hidden">Match! Skip draw</span>
+        {/* Compact draw instructions for mobile */}
+        {isMyTurn && roomState.phase === 'turn-draw' && (
+          <div className="md:hidden text-center text-gray-300 text-xs">
+            <div>D=Stock{canDrawDiscard && ' • F=Discard'}</div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Right Side: Game Action Buttons */}
-      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+        {/* Skip Draw Notification */}
+        {isMyTurn && roomState.phase === 'await-move' && 
+         roomState.turnActions?.hasDiscarded && roomState.turnActions?.hasDrawn && (
+          <div className="text-center text-green-400 text-xs sm:text-sm">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span>🎯</span>
+              <span className="hidden sm:inline">Matching discard! Draw skipped</span>
+              <span className="sm:hidden">Match! Skip draw</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Right Side: Game Action Buttons - Fixed width, always centered */}
+      <div className="flex items-center justify-center gap-2 sm:gap-3 lg:gap-4 min-w-0 flex-shrink-0">
         {/* Show Button */}
         <button
           onClick={show}
@@ -175,20 +178,20 @@ const Controls: React.FC = () => {
           <span className="hidden sm:inline">Move</span>
           <span className="sm:hidden">M</span>
         </button>
-      </div>
 
-      {/* Turn Actions Status - Hidden on mobile */}
-      {isMyTurn && roomState.turnActions && (
-        <div className="hidden lg:block text-right text-sm">
-          <div className="text-gray-400">Turn Progress:</div>
-          <div className={`${roomState.turnActions.hasDiscarded ? 'text-green-400' : 'text-gray-500'}`}>
-            ✓ Discard
+        {/* Turn Actions Status - Hidden on mobile */}
+        {isMyTurn && roomState.turnActions && (
+          <div className="hidden lg:block text-right text-sm ml-4">
+            <div className="text-gray-400">Turn Progress:</div>
+            <div className={`${roomState.turnActions.hasDiscarded ? 'text-green-400' : 'text-gray-500'}`}>
+              ✓ Discard
+            </div>
+            <div className={`${roomState.turnActions.hasDrawn ? 'text-green-400' : 'text-gray-500'}`}>
+              ✓ Draw
+            </div>
           </div>
-          <div className={`${roomState.turnActions.hasDrawn ? 'text-green-400' : 'text-gray-500'}`}>
-            ✓ Draw
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
