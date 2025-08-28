@@ -23,11 +23,7 @@ const Controls: React.FC = () => {
           }
           break;
         case 'f':
-          if (roomState.phase === 'turn-draw' && roomState.topDiscard?.cards.length) {
-            drawDiscard('first');
-          }
-          break;
-        case 'l':
+          // F key now draws from discard pile (always the top card)
           if (roomState.phase === 'turn-draw' && roomState.topDiscard?.cards.length) {
             drawDiscard('last');
           }
@@ -116,7 +112,7 @@ const Controls: React.FC = () => {
           <div className="text-xs text-gray-400 mt-1">
             D = Stock
             {canDrawDiscard && (
-              <span> • F = First discard • L = Last discard</span>
+              <span> • F = Discard pile</span>
             )}
             {!canDrawDiscard && roomState.topDiscard?.cards.length && (
               <span className="text-red-400"> • Cannot draw your own discard</span>

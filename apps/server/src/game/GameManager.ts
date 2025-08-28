@@ -191,15 +191,12 @@ export class GameManager {
     const canSkipDraw = this.checkMatchingDiscard(room!.topDiscard, discardGroup);
     
     if (canSkipDraw) {
-      // Player discarded matching card - move directly to await-move with draw marked as complete
-      room!.topDiscard = discardGroup;
-      room!.cardSlotPreview = [];
-      room!.turnActions.hasDrawn = true; // Mark as "drawn" to allow turn end
+      // Player discarded matching card - skip draw but keep cards in card slot until MOVE
+      room!.turnActions.hasDrawn = true; // Mark as "drawn" to allow MOVE
       room!.phase = 'await-move';
       
       this.io.to(data.roomCode).emit('room:state', room!);
       this.io.to(data.roomCode).emit('turn:updated', { 
-        discardGroup: discardGroup,
         skippedDraw: true // Indicate they skipped draw due to matching discard
       });
     } else {

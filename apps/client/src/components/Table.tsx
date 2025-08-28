@@ -113,28 +113,20 @@ const Table: React.FC = () => {
                   <div className="text-white text-xs sm:text-sm font-medium">Discard</div>
                   <div className="relative">
                     {topDiscard && topDiscard.cards.length > 0 ? (
-                      <div className="flex -space-x-2 sm:-space-x-3 lg:-space-x-4">
-                        {topDiscard.cards.map((card, index) => (
-                          <Card
-                            key={card.id}
-                            card={card}
-                            size="lg"
-                            className={`cursor-pointer transition-transform hover:scale-105 ${
-                              index === 0 || index === topDiscard.cards.length - 1
-                                ? 'hover:-translate-y-2'
-                                : ''
-                            }`}
-                            onClick={() => {
-                              if (roomState.phase === 'turn-draw') {
-                                if (index === 0) {
-                                  drawDiscard('first');
-                                } else if (index === topDiscard.cards.length - 1) {
-                                  drawDiscard('last');
-                                }
-                              }
-                            }}
-                          />
-                        ))}
+                      <div className="flex justify-center">
+                        {/* Only show the top (last) card from the discard pile */}
+                        <Card
+                          key={topDiscard.cards[topDiscard.cards.length - 1].id}
+                          card={topDiscard.cards[topDiscard.cards.length - 1]}
+                          size="lg"
+                          className="cursor-pointer transition-transform hover:scale-105 hover:-translate-y-2"
+                          onClick={() => {
+                            if (roomState.phase === 'turn-draw') {
+                              // Always draw the last card since that's what we're showing
+                              drawDiscard('last');
+                            }
+                          }}
+                        />
                       </div>
                     ) : (
                       <div className="card-slot">
